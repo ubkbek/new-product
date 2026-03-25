@@ -467,7 +467,8 @@ export default {
   outline: none;
   font-family: inherit;
   background-color: #fff;
-  width: 120px;
+  width: 100%;
+  box-sizing: border-box;
   text-align: center;
   text-align-last: center;
 }
