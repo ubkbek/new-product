@@ -100,7 +100,7 @@ export default {
 .new-product-video {
   font-family: 'Inter', sans-serif;
   width: 100%;
-  max-width: 950px;
+  width: 100%;
   margin: 0 auto;
   padding: 0 0 2rem 0;
   box-sizing: border-box;

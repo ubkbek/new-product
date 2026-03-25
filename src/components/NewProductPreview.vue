@@ -29,15 +29,19 @@
           <div class="new-product-preview__main-views">
              <div class="new-product-preview__main-img-wrap">
                 <button class="new-product-preview__nav-btn new-product-preview__nav-btn--left" @click="prevImg">
-                  &larr;
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
                 </button>
                 <img :src="galleryImages[selectedImageIndex]" alt="Product" class="new-product-preview__main-img">
-                <button class="new-product-preview__nav-btn new-product-preview__nav-btn--right" @click="nextImg">
-                  &rarr;
-                </button>
              </div>
              <div class="new-product-preview__main-img-wrap new-product-preview__main-img-wrap--secondary">
                 <img :src="galleryImages[(selectedImageIndex + 1) % galleryImages.length]" alt="Product" class="new-product-preview__main-img">
+                <button class="new-product-preview__nav-btn new-product-preview__nav-btn--right" @click="nextImg">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
              </div>
           </div>
         </div>
@@ -61,7 +65,7 @@
           </div>
 
           <div class="new-product-preview__extra-img-wrap">
-            <img src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&w=1200&q=80" alt="Extra Preview" class="new-product-preview__extra-img">
+            <img src="https://images.unsplash.com/photo-1541443131876-44b03de101c5?auto=format&fit=crop&w=1200&q=80" alt="Extra Preview" class="new-product-preview__extra-img">
           </div>
 
           <div class="new-product-preview__desc-blocks">
@@ -201,12 +205,12 @@ export default {
       selectedImageIndex: 2,
       isPhoneVisible: false,
       galleryImages: [
-        'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1542362567-b52adfe46b3f?auto=format&fit=crop&w=600&q=80',
         'https://images.unsplash.com/photo-1541443131876-44b03de101c5?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=600&q=80',
         'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=600&q=80'
+        'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=80'
       ],
       specs: [
         { icon: '⚙️', label: 'Мотори', value: '1500w' },
@@ -233,8 +237,8 @@ export default {
       ],
       colorVariants: [
         { id: 1, img: 'https://images.unsplash.com/photo-1541443131876-44b03de101c5?auto=format&fit=crop&w=100&q=80', disabled: false },
-        { id: 2, img: 'https://images.unsplash.com/photo-1542362567-b52adfe46b3f?auto=format&fit=crop&w=100&q=80', disabled: false },
-        { id: 3, img: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=100&q=80', disabled: true },
+        { id: 2, img: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=100&q=80', disabled: false },
+        { id: 3, img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=100&q=80', disabled: true },
         { id: 4, img: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=100&q=80', disabled: false }
       ],
       selectedColor: 1,
@@ -269,7 +273,6 @@ export default {
 .new-product-preview {
   font-family: 'Inter', sans-serif;
   width: 100%;
-  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -278,10 +281,12 @@ export default {
   grid-template-columns: 1fr 360px;
   gap: 32px;
   padding-bottom: 3rem;
+  min-width: 0;
 }
 
 .new-product-preview__content {
   background-color: transparent;
+  min-width: 0;
 }
 
 .new-product-preview__product-title {
@@ -296,6 +301,7 @@ export default {
   display: flex;
   gap: 20px;
   margin-bottom: 40px;
+  min-width: 0;
 }
 
 .new-product-preview__thumbnails {
@@ -345,6 +351,7 @@ export default {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+  min-width: 0;
 }
 
 .new-product-preview__main-img-wrap {
@@ -364,21 +371,31 @@ export default {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
   border: none;
-  background: rgba(255,255,255,0.8);
+  background: transparent;
   cursor: pointer;
-  z-index: 2;
-  font-size: 18px;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #374151;
+  transition: opacity 0.2s, transform 0.2s;
 }
 
-.new-product-preview__nav-btn--left { left: 16px; }
-.new-product-preview__nav-btn--right { right: 16px; }
+.new-product-preview__nav-btn:hover {
+  opacity: 0.7;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.new-product-preview__nav-btn svg {
+  width: 28px;
+  height: 28px;
+}
+
+.new-product-preview__nav-btn--left { left: 8px; }
+.new-product-preview__nav-btn--right { right: 8px; }
 
 .new-product-preview__main-img-wrap--secondary {
   opacity: 0.9;

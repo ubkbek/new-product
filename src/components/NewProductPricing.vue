@@ -2,62 +2,67 @@
   <div class="new-product-pricing">
     
     <!-- 1. SKU Info Card -->
-    <div class="new-product-pricing__card">
-      <h3 class="new-product-pricing__card-title">SKU qanday shakllanadi</h3>
-      <p class="new-product-pricing__card-desc">
-        SKU — bu mahsulot yoki uning variantlarini ajratib turuvchi maxsus kod. Bu kod orqali tizim mahsulotlarni hisobga oladi va ombordagi zaxiralarni boshqaradi. Agar mahsulot bir nechta variantda bo'lsa (masalan: rang yoki o'lcham), har bir variant uchun alohida SKU bo'lishi kerak.
-      </p>
-      
-      <div class="new-product-pricing__example-grid">
-        <div class="new-product-pricing__example-col">
-          <h4 class="new-product-pricing__example-subtitle">Misol: Mahsulot nomi: Jack</h4>
-          <p class="new-product-pricing__example-label">Variantlar:</p>
-          <ul class="new-product-pricing__example-list">
-            <li>Qora C5c</li>
-            <li>Qora W4-01</li>
-            <li>Oq C5c</li>
-            <li>Oq W4-01</li>
-          </ul>
-          <p class="new-product-pricing__example-note">Bu holatda har bir variant uchun alohida SKU belgilanadi.</p>
-        </div>
+    <div class="container-small">
+      <div class="new-product-pricing__card">
+        <h3 class="new-product-pricing__card-title">SKU qanday shakllanadi</h3>
+        <p class="new-product-pricing__card-desc">
+          SKU — bu mahsulot yoki uning variantlarini ajratib turuvchi maxsus kod. Bu kod orqali tizim mahsulotlarni hisobga oladi va ombordagi zaxiralarni boshqaradi. Agar mahsulot bir nechta variantda bo'lsa (masalan: rang yoki o'lcham), har bir variant uchun alohida SKU bo'lishi kerak.
+        </p>
         
-        <div class="new-product-pricing__example-col">
-          <h4 class="new-product-pricing__example-subtitle">Masalan:</h4>
-          <ul class="new-product-pricing__example-list">
-            <li>Jack-qora-C5c</li>
-            <li>Jack-qora-W4-01</li>
-            <li>Jack-oq-C5c</li>
-            <li>Jack-oq-W4-01</li>
-          </ul>
-          <p class="new-product-pricing__example-note">Har bir mahsulot yoki variant uchun takrorlanmaydigan (noyob) SKU kiriting.</p>
+        <div class="new-product-pricing__example-grid">
+          <div class="new-product-pricing__example-col">
+            <h4 class="new-product-pricing__example-subtitle">Misol: Mahsulot nomi: Jack</h4>
+            <p class="new-product-pricing__example-label">Variantlar:</p>
+            <ul class="new-product-pricing__example-list">
+              <li>Qora C5c</li>
+              <li>Qora W4-01</li>
+              <li>Oq C5c</li>
+              <li>Oq W4-01</li>
+            </ul>
+            <p class="new-product-pricing__example-note">Bu holatda har bir variant uchun alohida SKU belgilanadi.</p>
+          </div>
+          
+          <div class="new-product-pricing__example-col">
+            <h4 class="new-product-pricing__example-subtitle">Masalan:</h4>
+            <ul class="new-product-pricing__example-list">
+              <li>Jack-qora-C5c</li>
+              <li>Jack-qora-W4-01</li>
+              <li>Jack-oq-C5c</li>
+              <li>Jack-oq-W4-01</li>
+            </ul>
+            <p class="new-product-pricing__example-note">Har bir mahsulot yoki variant uchun takrorlanmaydigan (noyob) SKU kiriting.</p>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- 2. Product Name SKU Card -->
-    <div class="new-product-pricing__card">
-      <h3 class="new-product-pricing__card-title">MAHSULOT NOMI UCHUN SKU</h3>
-      <div class="new-product-pricing__input-group">
-        <label class="new-product-pricing__input-label">Mahsulot SKU (100 tagacha harf yoki raqam)</label>
-        <div class="new-product-pricing__input-wrapper">
-          <input 
-            type="text" 
-            class="new-product-pricing__input" 
-            v-model="productSku" 
-            maxlength="100"
-            placeholder="Jack"
-          >
-          <span class="new-product-pricing__counter">{{ productSku.length }}/100</span>
+    <div class="container-small">
+      <div class="new-product-pricing__card">
+        <h3 class="new-product-pricing__card-title">MAHSULOT NOMI UCHUN SKU</h3>
+        <div class="new-product-pricing__input-group">
+          <label class="new-product-pricing__input-label">Mahsulot SKU (100 tagacha harf yoki raqam)</label>
+          <div class="new-product-pricing__input-wrapper">
+            <input 
+              type="text" 
+              class="new-product-pricing__input" 
+              v-model="productSku" 
+              maxlength="100"
+              placeholder="Jack"
+            >
+            <span class="new-product-pricing__counter">{{ productSku.length }}/100</span>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- 3. Pricing Table Section -->
-    <div class="new-product-pricing__table-wrapper">
-      <table class="new-product-pricing__table">
-        <thead>
-          <tr>
-            <th>№</th>
+    <div class="container-wide">
+      <div class="new-product-pricing__table-wrapper">
+        <table class="new-product-pricing__table">
+          <thead>
+            <tr>
+              <th>№</th>
             <th>Sotuvchi kodi</th>
             <th>Shtrix-kod raqami</th>
             <th>MXIK kodi</th>
@@ -132,6 +137,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
   </div>
@@ -259,7 +265,6 @@ export default {
 .new-product-pricing {
   font-family: 'Inter', sans-serif;
   width: 100%;
-  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -273,7 +278,7 @@ export default {
   border: 1px solid #DFE2E9;
   border-radius: 12px;
   padding: 24px;
-  max-width: 950px;
+  width: 100%;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
@@ -351,7 +356,6 @@ export default {
 .new-product-pricing__input-wrapper {
   position: relative;
   width: 100%;
-  max-width: 600px;
 }
 
 .new-product-pricing__input {
@@ -393,6 +397,7 @@ export default {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
+  table-layout: fixed;
 }
 
 .new-product-pricing__table th {
@@ -400,32 +405,33 @@ export default {
   color: #374151;
   font-weight: 600;
   text-align: center;
-  padding: 12px 10px;
+  padding: 12px 6px;
   border-bottom: 1px solid #DFE2E9;
   border-right: 1px solid #DFE2E9;
   line-height: 1.3;
   vertical-align: middle;
 }
 
-/* Specific column widths for better layout */
-.new-product-pricing__table th:nth-child(1) { width: 40px; min-width: 40px; } /* № */
-.new-product-pricing__table th:nth-child(2) { min-width: 160px; } /* Sotuvchi kodi */
-.new-product-pricing__table th:nth-child(3) { min-width: 140px; } /* Shtrix-kod */
-.new-product-pricing__table th:nth-child(4) { min-width: 150px; } /* MXIK */
-.new-product-pricing__table th:nth-child(5) { min-width: 160px; } /* Tavsiya narx */
-.new-product-pricing__table th:nth-child(6) { min-width: 100px; } /* Barcha miqdor */
-.new-product-pricing__table th:nth-child(7) { min-width: 120px; } /* Eng kam sotish */
-.new-product-pricing__table th:nth-child(8) { min-width: 140px; } /* Bahosi */
-.new-product-pricing__table th:nth-child(9) { min-width: 140px; } /* Chegirma */
-.new-product-pricing__table th:nth-child(10) { min-width: 140px; } /* Sotish narxi */
-.new-product-pricing__table th:nth-child(11) { min-width: 120px; } /* Komissiya */
-.new-product-pricing__table th:nth-child(12) { min-width: 150px; } /* Chiqarish */
+/* Specific column widths for fluid percentage layout */
+.new-product-pricing__table th:nth-child(1) { width: 4%; min-width: 30px; } /* № */
+.new-product-pricing__table th:nth-child(2) { width: 9%; min-width: 90px; } /* Sotuvchi kodi */
+.new-product-pricing__table th:nth-child(3) { width: 11%; min-width: 90px; } /* Shtrix-kod */
+.new-product-pricing__table th:nth-child(4) { width: 11%; min-width: 120px; } /* MXIK */
+.new-product-pricing__table th:nth-child(5) { width: 8%; min-width: 80px; } /* Tavsiya narx */
+.new-product-pricing__table th:nth-child(6) { width: 6%; min-width: 60px; } /* Barcha miqdor */
+.new-product-pricing__table th:nth-child(7) { width: 6%; min-width: 60px; } /* Eng kam sotish */
+.new-product-pricing__table th:nth-child(8) { width: 13%; min-width: 120px; } /* Bahosi */
+.new-product-pricing__table th:nth-child(9) { width: 11%; min-width: 100px; } /* Chegirma */
+.new-product-pricing__table th:nth-child(10) { width: 7%; min-width: 90px; } /* Sotish narxi */
+.new-product-pricing__table th:nth-child(11) { width: 8%; min-width: 70px; } /* Komissiya */
+.new-product-pricing__table th:nth-child(12) { width: 6%; min-width: 60px; } /* Chiqarish */
 
 .new-product-pricing__table td {
-  padding: 12px;
+  padding: 10px 6px;
   border-bottom: 1px solid #DFE2E9;
   border-right: 1px solid #DFE2E9;
   vertical-align: middle;
+  text-align: center;
 }
 
 .new-product-pricing__table th:last-child,
@@ -462,11 +468,14 @@ export default {
   font-family: inherit;
   background-color: #fff;
   width: 120px;
+  text-align: center;
+  text-align-last: center;
 }
 
 .new-product-pricing__cell-input-wrap {
   display: flex;
   align-items: center;
+  justify-content: center;
   border: 1.5px solid #DFE2E9;
   border-radius: 8px;
   padding: 0 8px;
@@ -481,6 +490,7 @@ export default {
   font-size: 13px;
   color: #111827;
   font-family: inherit;
+  text-align: center;
 }
 
 .new-product-pricing__cell-input--wide {

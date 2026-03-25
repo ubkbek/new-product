@@ -1,20 +1,19 @@
 <template>
   <div id="app">
-    <div class="container">
+    <div class="container-large">
       <NewProductSteps :currentStep="currentStep" @change-step="updateStep" />
-      
-      <div v-if="currentStep === 1">
-        <StepOne />
-      </div>
-      
-      <div v-else-if="currentStep === 2">
-        <NewProductPricing />
-      </div>
+    </div>
+    
+    <div class="container-small" v-if="currentStep === 1">
+      <StepOne />
+    </div>
+    
+    <div v-else-if="currentStep === 2">
+      <NewProductPricing />
+    </div>
 
-      <div v-else-if="currentStep === 3">
-        <NewProductPreview />
-      </div>
-
+    <div class="container-large" v-else-if="currentStep === 3">
+      <NewProductPreview />
     </div>
   </div>
 </template>
@@ -56,6 +55,23 @@ body {
 
 #app {
   padding: 2rem;
+}
+
+.container-large {
+  max-width: 1296px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.container-small {
+  max-width: 966px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.container-wide {
+  width: 90%;
+  margin: 0 auto;
 }
 
 .step-two-placeholder, .step-three-placeholder {

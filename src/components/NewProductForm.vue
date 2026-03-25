@@ -183,7 +183,7 @@ export default {
 .new-product-form {
   font-family: 'Inter', sans-serif;
   width: 100%;
-  max-width: 950px;
+  width: 100%;
   margin: 0 auto;
   padding: 1rem 0 3rem 0;
   box-sizing: border-box;
