@@ -12,63 +12,38 @@
     <!-- Card -->
     <div class="new-product-category__card">
       <div class="new-product-category__grid">
-        
-        <!-- Category 1 -->
-        <div class="new-product-category__group">
+        <div 
+          v-for="(config, index) in dropdownConfigs" 
+          :key="index" 
+          class="new-product-category__group"
+        >
           <label class="new-product-category__label">
-            Kategoriyani belgilang<span class="new-product-category__required">*</span>
+            {{ config.label }}<span class="new-product-category__required">*</span>
           </label>
           <div class="new-product-category__select-wrapper">
-            <select class="new-product-category__select" v-model="form.category_id" required>
-              <option value="" disabled>Tanlang</option>
-              <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-            </select>
-            <svg class="new-product-category__select-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
+            <BaseDropdown
+              v-model="form[config.model]"
+              :options="config.options"
+              :placeholder="config.placeholder"
+              label-key="name"
+              value-key="id"
+              :searchable="config.searchable"
+            />
           </div>
         </div>
-
-        <!-- Category 2 -->
-        <div class="new-product-category__group">
-          <label class="new-product-category__label">
-            Ichki kategoriyani belgilang<span class="new-product-category__required">*</span>
-          </label>
-          <div class="new-product-category__select-wrapper">
-            <select class="new-product-category__select" v-model="form.inner_category_id" required>
-              <option value="" disabled>Tanlang</option>
-              <option v-for="cat in innerCategories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-            </select>
-            <svg class="new-product-category__select-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </div>
-        </div>
-
-        <!-- Category 3 -->
-        <div class="new-product-category__group">
-          <label class="new-product-category__label">
-            Ichki kategoriyani belgilang<span class="new-product-category__required">*</span>
-          </label>
-          <div class="new-product-category__select-wrapper">
-            <select class="new-product-category__select" v-model="form.child_category_id" required>
-              <option value="" disabled>Tanlang</option>
-              <option v-for="cat in childCategories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-            </select>
-            <svg class="new-product-category__select-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </div>
-        </div>
-
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import BaseDropdown from './BaseDropdown.vue';
+
 export default {
   name: 'NewProductCategory',
+  components: {
+    BaseDropdown
+  },
   data() {
     return {
       form: {
@@ -79,7 +54,11 @@ export default {
       categories: [
         { id: 1, name: 'Elektronika' },
         { id: 2, name: 'Kiyim-kechak' },
-        { id: 3, name: 'Maishiy texnika' }
+        { id: 3, name: 'Maishiy texnika' },
+        { id: 4, name: 'Oziq-ovqat' },
+        { id: 5, name: 'Qurilish mollari' },
+        { id: 6, name: 'Santexnika' },
+        { id: 7, name: 'Avto tovarlar' }
       ],
       innerCategories: [
         { id: 1, name: 'Smartfonlar' },
@@ -90,6 +69,33 @@ export default {
         { id: 2, name: 'Ehtiyot qismlari' }
       ]
     };
+  },
+  computed: {
+    dropdownConfigs() {
+      return [
+        { 
+          label: 'Kategoriyani belgilang', 
+          model: 'category_id', 
+          options: this.categories, 
+          placeholder: 'Kategoriyani tanlang', 
+          searchable: false 
+        },
+        { 
+          label: 'Ichki kategoriyani belgilang', 
+          model: 'inner_category_id', 
+          options: this.innerCategories, 
+          placeholder: 'Kategoriyani tanlang', 
+          searchable: true 
+        },
+        { 
+          label: 'Kichik kategoriyani belgilang', 
+          model: 'child_category_id', 
+          options: this.childCategories, 
+          placeholder: 'Kategoriyani tanlang', 
+          searchable: true 
+        }
+      ];
+    }
   }
 };
 </script>

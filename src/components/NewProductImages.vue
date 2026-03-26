@@ -13,6 +13,13 @@
       </button>
       <button 
         class="new-product-images__tab" 
+        :class="{ 'new-product-images__tab--active': activeTab === 'link' }"
+        @click="activeTab = 'link'"
+      >
+        Rasm linkini joylash
+      </button>
+      <button 
+        class="new-product-images__tab" 
         :class="{ 'new-product-images__tab--active': activeTab === 'ai' }"
         @click="activeTab = 'ai'"
       >
@@ -28,42 +35,17 @@
         
         <!-- Requirements Cards -->
         <div class="new-product-images__info-grid">
-          <div class="new-product-images__info-card">
-            <h4 class="new-product-images__info-title">Rasm talablari</h4>
-            <p class="new-product-images__info-text">
-              JPG, JPEG, PNG yoki WebP format<br>
-              Eng kamida 1080x1440 o&#8216;lcham<br>
-              5 MB dan katta bo&#8216;lmasin<br>
-              Mahsulotni turli burchaklardan tushiring
-            </p>
-          </div>
-          
-          <div class="new-product-images__info-card">
-            <h4 class="new-product-images__info-title">Ranglari bo&#8216;lsa</h4>
-            <p class="new-product-images__info-text">
-              Agar mahsulot bir nechta rangda bo&#8216;lsa, har bir rang uchun alohida rasm yuklang.
-            </p>
-          </div>
-          
-          <div class="new-product-images__info-card">
-            <h4 class="new-product-images__info-title">Rasm sotuvni oshiradi</h4>
-            <p class="new-product-images__info-text">
-              Sifatli va yaqin olingan rasmlar mahsulotni aniq ko&#8216;rsatadi va xaridor ishonchini oshiradi.
-            </p>
-          </div>
-          
-          <div class="new-product-images__info-card">
-            <h4 class="new-product-images__info-title">Moderatsiya</h4>
-            <p class="new-product-images__info-text">
-              Rasmlar aniq, sifatli va boshqa brendlarga tegishli bo&#8216;lmagan bo&#8216;lishi kerak.<br>
-              Talablarga mos kelmagan rasmlar tasdiqlanmaydi.
-            </p>
-          </div>
+          <NewProductImageInfoCard 
+            v-for="info in imageInfoCards" 
+            :key="info.title"
+            :title="info.title"
+            :text="info.text"
+          />
         </div>
 
         <!-- Link -->
         <a href="#" class="new-product-images__link">
-          Yo&#8216;riqnomada batafsil <span class="new-product-images__link-arrow">&rarr;</span>
+          Yo'riqnomada batafsil <span class="new-product-images__link-arrow">&rarr;</span>
         </a>
 
         <!-- Upload Grid -->
@@ -81,6 +63,36 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Link Section -->
+      <div v-show="activeTab === 'link'" class="new-product-images__link-section">
+        <!-- Requirements Cards -->
+        <div class="new-product-images__info-grid">
+          <NewProductImageInfoCard 
+            v-for="info in imageInfoCards" 
+            :key="'link-' + info.title"
+            :title="info.title"
+            :text="info.text"
+          />
+        </div>
+
+        <!-- Input Area -->
+        <div class="new-product-images__link-input-area">
+          <label class="new-product-images__input-label">Rasm linkini joylashtiring</label>
+          <div class="new-product-images__input-group">
+            <input 
+              type="text" 
+              class="new-product-images__link-field" 
+              placeholder="-" 
+              v-model="imageLink"
+            >
+            <button class="new-product-images__add-btn" @click="addImageByLink">
+              <span class="new-product-images__plus">+</span>
+              Qo'shish
+            </button>
           </div>
         </div>
       </div>
@@ -105,13 +117,37 @@
 </template>
 
 <script>
+import NewProductImageInfoCard from './NewProductImageInfoCard.vue';
+
 export default {
   name: 'NewProductImages',
+  components: {
+    NewProductImageInfoCard
+  },
   data() {
     return {
-      activeTab: 'upload', // 'upload' | 'ai'
+      activeTab: 'upload', // 'upload' | 'link' | 'ai'
       images: [],
-      searchQuery: ''
+      searchQuery: '',
+      imageLink: '',
+      imageInfoCards: [
+        { 
+          title: 'Rasm talablari', 
+          text: 'JPG, JPEG, PNG yoki WebP format<br>Eng kamida 1080x1440 o\'lcham<br>5 MB dan katta bo\'lmasin<br>Mahsulotni turli burchaklardan tushiring' 
+        },
+        { 
+          title: 'Ranglari bo\'lsa', 
+          text: 'Agar mahsulot bir nechta rangda bo\'lsa, har bir rang uchun alohida rasm yuklang.' 
+        },
+        { 
+          title: 'Rasm sotuvni oshiradi', 
+          text: 'Sifatli va yaqin olingan rasmlar mahsulotni aniq ko\'rsatadi va xaridor ishonchini oshiradi.' 
+        },
+        { 
+          title: 'Moderatsiya', 
+          text: 'Rasmlar aniq, sifatli va boshqa brendlarga tegishli bo\'lmagan bo\'lishi kerak.<br>Talablarga mos kelmagan rasmlar tasdiqlanmaydi.' 
+        }
+      ]
     };
   },
   methods: {
@@ -120,6 +156,14 @@ export default {
       if (files.length > 0) {
         // Logic for handling selected frames/files can be developed later.
         console.log(files);
+      }
+    },
+    addImageByLink() {
+      if (this.imageLink) {
+        console.log('Adding image by link:', this.imageLink);
+        // Add to images array if needed
+        this.images.push(this.imageLink);
+        this.imageLink = '';
       }
     }
   }
@@ -189,28 +233,6 @@ export default {
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 24px;
-}
-
-.new-product-images__info-card {
-  border: 1px solid #DFE2E9;
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-}
-
-.new-product-images__info-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 8px 0;
-}
-
-.new-product-images__info-text {
-  font-size: 13px;
-  color: #6b7280;
-  line-height: 1.5;
-  margin: 0;
 }
 
 .new-product-images__link {
@@ -323,6 +345,69 @@ export default {
 
 .new-product-images__search-input::placeholder {
   color: #9ca3af;
+}
+
+/* Link Input Section */
+.new-product-images__link-input-area {
+  margin-top: 32px;
+}
+
+.new-product-images__input-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.new-product-images__input-group {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.new-product-images__link-field {
+  flex: 1;
+  height: 48px;
+  border: 1px solid #DFE2E9;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 15px;
+  color: #1f2937;
+  outline: none;
+  background-color: #F9FAFB;
+  transition: border-color 0.2s ease;
+}
+
+.new-product-images__link-field:focus {
+  border-color: #22c55e;
+  background-color: #ffffff;
+}
+
+.new-product-images__add-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 24px;
+  background-color: #ffffff;
+  border: 1.5px solid #22c55e;
+  border-radius: 8px;
+  color: #22c55e;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.new-product-images__add-btn:hover {
+  background-color: #f0fdf4;
+}
+
+.new-product-images__plus {
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1;
 }
 
 /* Responsive Handling */

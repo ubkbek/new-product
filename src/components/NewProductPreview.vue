@@ -198,6 +198,8 @@
 </template>
 
 <script>
+import { formatPrice } from '../utils/formatters';
+
 export default {
   name: 'NewProductPreview',
   data() {
@@ -261,9 +263,7 @@ export default {
     prevImg() {
       this.selectedImageIndex = (this.selectedImageIndex - 1 + this.galleryImages.length) % this.galleryImages.length;
     },
-    formatPrice(val) {
-      return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    }
+    formatPrice
   }
 };
 </script>

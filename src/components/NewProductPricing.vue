@@ -144,6 +144,8 @@
 </template>
 
 <script>
+import { formatPrice } from '../utils/formatters';
+
 export default {
   name: 'NewProductPricing',
   data() {
@@ -251,10 +253,7 @@ export default {
       if (sale <= 0) return 0;
       return Math.max(0, sale - row.commission);
     },
-    formatPrice(value) {
-      if (!value) return '0';
-      return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    }
+    formatPrice
   }
 };
 </script>
