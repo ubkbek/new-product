@@ -2,7 +2,7 @@
   <div class="new-product__steps">
     <!-- Breadcrumbs -->
     <div class="new-product__steps__breadcrumbs">
-      <span class="new-product__steps__breadcrumb-link">Главная /</span>
+      <span class="new-product__steps__breadcrumb-link">Asosiy /</span>
       <span class="new-product__steps__breadcrumb-current">Yangi mahsulot yoki xizmat qo'shish</span>
     </div>
 
@@ -11,7 +11,9 @@
       
       <!-- Left side: Title + Required indicator -->
       <div class="new-product__steps__title-wrapper">
-        <h1 class="new-product__steps__title">Yangi mahsulot qo'shish</h1>
+        <h1 class="new-product__steps__title">
+          {{ currentStep === 3 ? "E'lonning ko'rinishi" : "Yangi mahsulot qo'shish" }}
+        </h1>
       </div>
 
       <!-- Right side: Stepper + Button -->
@@ -80,7 +82,7 @@ export default {
       steps: [
         { id: 1, title: 'Asosiy ma’lumotlar' },
         { id: 2, title: 'Narxlar va SKU' },
-        { id: 3, title: 'Natija' }
+        { id: 3, title: "E'lon ko'rinishi" }
       ]
     };
   },
@@ -140,11 +142,11 @@ export default {
 }
 
 .new-product__steps__title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #374151;
   margin: 0 0 8px 0;
-  letter-spacing: -0.5px;
+  letter-spacing: 0%;
+  color: #48545D;
+  font-weight: 600;
+  font-size: 32px;
 }
 
 /* Actions Box (Stepper + Button) */

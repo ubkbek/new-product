@@ -81,9 +81,8 @@
 
       <!-- Right Sidebar Area -->
       <aside class="new-product-preview__sidebar">
-        
         <!-- Options Section -->
-        <div class="new-product-preview__card">
+        <div class="new-product-preview__options-section">
           <div class="new-product-preview__option-group">
             <label class="new-product-preview__option-label">Rang</label>
             <div class="new-product-preview__color-grid">
@@ -119,20 +118,22 @@
               </div>
             </div>
           </div>
+        </div>
           
-          <!-- Pricing -->
-          <div class="new-product-preview__price-block">
+        <!-- Pricing & CTA Card -->
+        <div class="new-product-preview__card">
+          <div class="new-product-preview__price-section">
             <h2 class="new-product-preview__price-main">{{ formatPrice(price) }} so'm</h2>
-            <div class="new-product-preview__price-comparison">
-              <span class="new-product-preview__price-arrow">&uarr;</span>
-              <span class="new-product-preview__price-old">{{ formatPrice(price) }} so'm</span>
-              <svg class="new-product-preview__price-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M9 5l7 7-7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            
+            <div class="new-product-preview__price-detail-box">
+              <span class="new-product-preview__price-arrow-up">&uarr;</span>
+              <span class="new-product-preview__price-detail-text">{{ formatPrice(price) }} so'm</span>
+              <svg class="new-product-preview__price-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M9 5l7 7-7 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </div>
-          </div>
-
-          <!-- CTA -->
+          </div> 
+          
           <button class="new-product-preview__cta-btn">Savatga qo'shish</button>
           
           <!-- Badges -->
@@ -149,24 +150,24 @@
         <!-- Seller Section -->
         <div class="new-product-preview__card">
           <div class="new-product-preview__seller-header">
-            <span class="new-product-preview__verified-badge">
+            <div class="new-product-preview__verified-pill">
                <svg class="new-product-preview__verified-icon" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                </svg>
                Ishonchli
-            </span>
+            </div>
           </div>
           <h3 class="new-product-preview__seller-name">ZAFAR MOTO TA'MINOT MAS'ULIYATI CHEKLANGAN JAMIYAT</h3>
           
           <div class="new-product-preview__phone-box">
-             <div class="new-product-preview__phone-input">
+             <div class="new-product-preview__phone-input-style">
                 <svg class="new-product-preview__phone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                    <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span class="new-product-preview__phone-text">{{ isPhoneVisible ? '+998 90 123 45 67' : '+998 ** *** ** **' }}</span>
+                <span class="new-product-preview__phone-placeholder">+998 ** *** ** **</span>
              </div>
              <button class="new-product-preview__phone-link" @click="isPhoneVisible = !isPhoneVisible">
-                {{ isPhoneVisible ? 'Yashirish' : 'Telefon raqamini ko\'rsatish' }}
+                Telefon raqamini ko'rsatish
              </button>
           </div>
 
@@ -175,7 +176,7 @@
                <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            Xorazm viloyati, Urganch shahar, Karauz Obidov ko'chasi, 6-uy
+            Xorazm viloyati, Urganch shahar, Korasiz Obidov ko'chasi, 6-uy
           </p>
         </div>
 
@@ -471,6 +472,11 @@ export default {
   gap: 20px;
 }
 
+.new-product-preview__options-section {
+  padding: 0;
+  margin-bottom: 8px;
+}
+
 .new-product-preview__card {
   background-color: #fff;
   border: 1px solid #DFE2E9;
@@ -478,7 +484,7 @@ export default {
   padding: 24px;
 }
 
-.new-product-preview__option-group {
+.new-product-preview__option-group:not(:last-child) {
   margin-bottom: 24px;
 }
 
@@ -556,56 +562,104 @@ export default {
   border-style: dashed;
 }
 
-.new-product-preview__price-block {
-  margin: 32px 0 20px 0;
+.new-product-preview__price-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .new-product-preview__price-main {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 800;
   color: #111827;
-  margin: 0 0 8px 0;
+  margin: 0;
+  letter-spacing: -1px;
+}
+
+.new-product-preview__price-detail-box {
+  display: flex;
+  align-items: center;
+  background-color: #FFF1F1;
+  border: 1px solid #FFDCDC;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.new-product-preview__price-detail-box:hover {
+  background-color: #FFE8E8;
+}
+
+.new-product-preview__price-arrow-up {
+  color: #F87171;
+  font-size: 18px;
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.new-product-preview__price-detail-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #F87171;
+}
+
+.new-product-preview__price-chevron {
+  width: 14px;
+  height: 14px;
+  color: #F87171;
+  margin-left: auto;
 }
 
 .new-product-preview__price-comparison {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background-color: #FFF7F0;
-  border: 1px solid #FFF1E6;
-  padding: 10px 16px;
-  border-radius: 10px;
-  color: #F87171;
-  font-weight: 500;
-  font-size: 14px;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
 .new-product-preview__price-old {
-  color: #F87171;
+  font-size: 16px;
+  color: #9ca3af;
+  text-decoration: line-through;
+  font-weight: 500;
 }
 
-.new-product-preview__price-info-icon {
-  width: 14px;
-  height: 14px;
-  margin-left: auto;
+.new-product-preview__price-discount {
+  background-color: #fee2e2;
+  color: #ef4444;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .new-product-preview__cta-btn {
   width: 100%;
-  height: 48px;
-  background-color: #22c55e;
+  height: 54px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   color: #fff;
   border: none;
-  border-radius: 10px;
-  font-size: 15px;
+  border-radius: 12px;
+  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
-  margin-bottom: 20px;
-  transition: background-color 0.2s;
+  margin-bottom: 24px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
 }
 
 .new-product-preview__cta-btn:hover {
-  background-color: #16a34a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.3);
+}
+
+.new-product-preview__cta-btn:active {
+  transform: translateY(0);
 }
 
 .new-product-preview__info-badges {
@@ -625,13 +679,13 @@ export default {
 }
 
 .new-product-preview__info-badge--danger {
-  background-color: #ECFDF5;
+  background-color: #ecfdf5;
   color: #059669;
 }
 
 .new-product-preview__info-badge--warning {
-  background-color: #FFFBEB;
-  color: #D97706;
+  background-color: #fffbeb;
+  color: #d97706;
 }
 
 /* Seller Card Styles */
@@ -639,14 +693,14 @@ export default {
   margin-bottom: 12px;
 }
 
-.new-product-preview__verified-badge {
+.new-product-preview__verified-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   background-color: #10b981;
   color: #fff;
-  padding: 4px 10px;
-  border-radius: 8px;
+  padding: 6px 14px;
+  border-radius: 100px;
   font-size: 12px;
   font-weight: 700;
 }
@@ -657,31 +711,27 @@ export default {
 }
 
 .new-product-preview__seller-name {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
-  color: #1f2937;
+  color: #111827;
   line-height: 1.4;
-  margin: 0 0 24px 0;
+  margin: 0 0 20px 0;
+  text-transform: uppercase;
 }
 
 .new-product-preview__phone-box {
-  background-color: #F9FAFB;
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.new-product-preview__phone-input {
+.new-product-preview__phone-input-style {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #374151;
-  font-weight: 600;
-  font-size: 15px;
+  gap: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 16px;
+  background-color: #fff;
+  margin-bottom: 12px;
 }
 
 .new-product-preview__phone-icon {
@@ -693,10 +743,13 @@ export default {
 .new-product-preview__phone-link {
   background: none;
   border: none;
-  color: #10b981;
-  font-size: 13px;
+  color: #22c55e;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  padding: 0;
+  width: 100%;
+  text-align: center;
 }
 
 .new-product-preview__address {

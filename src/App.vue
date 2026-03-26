@@ -33,13 +33,15 @@ export default {
     NewProductPreview
   },
   data() {
+    const savedStep = localStorage.getItem('currentStep');
     return {
-      currentStep: 1
+      currentStep: savedStep ? parseInt(savedStep) : 1
     }
   },
   methods: {
     updateStep(stepId) {
       this.currentStep = stepId;
+      localStorage.setItem('currentStep', stepId);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
