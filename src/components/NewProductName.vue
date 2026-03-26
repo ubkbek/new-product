@@ -113,7 +113,7 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  height: 100%;
+  height: auto;
 }
 
 .new-product-name__info-title {
