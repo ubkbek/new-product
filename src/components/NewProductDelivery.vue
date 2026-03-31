@@ -9,8 +9,8 @@
           v-for="day in deliveryOptions" 
           :key="'day-' + day"
           class="new-product-delivery__item new-product-delivery__item--day"
-          :class="{ 'new-product-delivery__item--active': selectedDelivery === day }"
-          @click="selectedDelivery = day"
+          :class="{ 'new-product-delivery__item--active': sharedProduct.delivery.selectedDelivery === day, 'new-product-delivery__item--disabled': isImagesIncomplete }"
+          @click="isImagesIncomplete ? null : sharedProduct.delivery.selectedDelivery = day"
         >
           <div class="new-product-delivery__radio-circle"></div>
           <span class="new-product-delivery__text">{{ day }} kun</span>
@@ -26,11 +26,11 @@
           v-for="payment in paymentOptions" 
           :key="payment.id"
           class="new-product-delivery__item new-product-delivery__item--payment"
-          :class="{ 'new-product-delivery__item--active': selectedPayments.includes(payment.id) }"
-          @click="togglePayment(payment.id)"
+          :class="{ 'new-product-delivery__item--active': sharedProduct.delivery.selectedPayments.includes(payment.id), 'new-product-delivery__item--disabled': isImagesIncomplete }"
+          @click="isImagesIncomplete ? null : togglePayment(payment.id)"
         >
           <div class="new-product-delivery__checkbox-box">
-             <svg v-if="selectedPayments.includes(payment.id)" class="new-product-delivery__check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+             <svg v-if="sharedProduct.delivery.selectedPayments.includes(payment.id)" class="new-product-delivery__check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
               </svg>
           </div>
@@ -50,10 +50,14 @@
 <script>
 export default {
   name: 'NewProductDelivery',
+  inject: ['sharedProduct'],
+  computed: {
+    isImagesIncomplete() {
+      return !this.sharedProduct.images || this.sharedProduct.images.length === 0;
+    }
+  },
   data() {
     return {
-      selectedDelivery: 1,
-      selectedPayments: [2], // SSUDA selected by default as in image
       deliveryOptions: [1, 2, 3, 4, 5],
       paymentOptions: [
         { 
@@ -91,11 +95,11 @@ export default {
   },
   methods: {
     togglePayment(id) {
-      const index = this.selectedPayments.indexOf(id);
+      const index = this.sharedProduct.delivery.selectedPayments.indexOf(id);
       if (index === -1) {
-        this.selectedPayments.push(id);
+        this.sharedProduct.delivery.selectedPayments.push(id);
       } else {
-        this.selectedPayments.splice(index, 1);
+        this.sharedProduct.delivery.selectedPayments.splice(index, 1);
       }
     }
   }
@@ -107,7 +111,6 @@ export default {
 
 .new-product-delivery {
   font-family: 'Inter', sans-serif;
-  width: 100%;
   width: 100%;
   margin: 0 auto;
   display: flex;
@@ -260,5 +263,15 @@ export default {
   .new-product-delivery__grid--payments {
     grid-template-columns: 1fr;
   }
+}
+.new-product-delivery__item--disabled {
+  background-color: #F8FAFC;
+  border-color: #E2E8F0;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.new-product-delivery__item--disabled:hover {
+  border-color: #E2E8F0;
 }
 </style>

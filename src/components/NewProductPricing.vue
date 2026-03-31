@@ -46,11 +46,11 @@
             <input 
               type="text" 
               class="new-product-pricing__input" 
-              v-model="productSku" 
+              v-model="sharedProduct.productSku" 
               maxlength="100"
               placeholder="Jack"
             >
-            <span class="new-product-pricing__counter">{{ productSku.length }}/100</span>
+            <span class="new-product-pricing__counter">{{ (sharedProduct.productSku || '').length }}/100</span>
           </div>
         </div>
       </div>
@@ -63,80 +63,235 @@
           <thead>
             <tr>
               <th>№</th>
-            <th>Sotuvchi kodi</th>
-            <th>Shtrix-kod raqami</th>
-            <th>MXIK kodi</th>
-            <th>Tavsiya qilingan narx</th>
-            <th>Barcha miqdori</th>
-            <th>Eng kam sotish miqdori</th>
-            <th>Bahosi (so'm)</th>
-            <th>Chegirma (so'm)</th>
-            <th>Sotish narx, so'm</th>
-            <th>Dona uchun komissiya</th>
-            <th>Har bir dona uchun chiqarish</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, index) in skuRows" :key="row.id">
-            <td class="new-product-pricing__td-center">{{ index + 1 }}</td>
-            <td>
-              <div class="new-product-pricing__cell-stack">
-                <span class="new-product-pricing__cell-sub">{{ row.variantName }}</span>
-                <span class="new-product-pricing__cell-main">{{ productSku + '-' + row.variantSku }}</span>
-              </div>
-            </td>
-            <td>
-              <span v-if="row.barcode">{{ row.barcode }}</span>
-              <span v-else class="new-product-pricing__text-muted">-</span>
-            </td>
-            <td>
-              <select class="new-product-pricing__select" v-model="row.mxikCode">
-                <option value="0866132781...">0866132781...</option>
-                <option value="Kod yoki nomi">Kod yoki nomi</option>
-              </select>
-            </td>
-            <td>
-              <span class="new-product-pricing__text-muted">{{ row.recommendedPriceText }}</span>
-            </td>
-            <td>
-              <div class="new-product-pricing__cell-input-wrap">
-                <input type="number" class="new-product-pricing__cell-input" v-model="row.totalQuantity">
-                <span class="new-product-pricing__cell-unit">ta</span>
-              </div>
-            </td>
-            <td>
-              <div class="new-product-pricing__cell-input-wrap">
-                <input type="number" class="new-product-pricing__cell-input" v-model="row.minSellQuantity">
-                <span class="new-product-pricing__cell-unit">ta</span>
-              </div>
-            </td>
-            <td>
-              <div class="new-product-pricing__cell-input-wrap">
-                <input type="number" class="new-product-pricing__cell-input new-product-pricing__cell-input--wide" v-model="row.price">
-                <span class="new-product-pricing__cell-unit">so'm</span>
-              </div>
-            </td>
-            <td>
-              <div class="new-product-pricing__cell-input-wrap">
-                <input type="number" class="new-product-pricing__cell-input new-product-pricing__cell-input--wide" v-model="row.discount">
-                <span class="new-product-pricing__cell-unit">so'm</span>
-              </div>
-            </td>
-            <td>
-              <span class="new-product-pricing__bold">{{ formatPrice(calculateSalePrice(row)) }}</span>
-            </td>
-            <td>
-              <div class="new-product-pricing__cell-stack">
-                <span class="new-product-pricing__bold">{{ formatPrice(row.commission) }}</span>
-                <span class="new-product-pricing__cell-sub">{{ row.commissionPercent }}%</span>
-              </div>
-            </td>
-            <td>
-              <span class="new-product-pricing__bold">{{ formatPrice(calculatePayout(row)) }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <th>Sotuvchi kodi</th>
+              <th>Shtrix-kod raqami</th>
+              <th class="new-product-pricing__th--bulk">
+                <div class="new-product-pricing__th-content">
+                  MXIK kodi
+                  <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('mxikCode', $event)">
+                    <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <!-- Bulk Popover -->
+                  <div v-if="activeBulkColumn === 'mxikCode'" class="new-product-pricing__bulk-popover" @click.stop>
+                    <input 
+                      type="text" 
+                      class="new-product-pricing__bulk-input" 
+                      placeholder="Kod yoki nomi..."
+                      v-model="bulkInputs.mxikCode"
+                      @keydown.enter="applyBulkValue('mxikCode')"
+                      ref="bulkInput_mxikCode"
+                    >
+                    <button class="new-product-pricing__bulk-apply" @click="applyBulkValue('mxikCode')">Barchasiga</button>
+                  </div>
+                </div>
+              </th>
+              <th>Tavsiya qilingan narx</th>
+              <th class="new-product-pricing__th--bulk">
+                <div class="new-product-pricing__th-content">
+                  Barcha miqdori 
+                  <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('totalQuantity', $event)">
+                    <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <!-- Bulk Popover -->
+                  <div v-if="activeBulkColumn === 'totalQuantity'" class="new-product-pricing__bulk-popover" @click.stop>
+                    <input 
+                      type="text" 
+                      class="new-product-pricing__bulk-input" 
+                      placeholder="Miqdor..."
+                      :value="formatPrice(bulkInputs.totalQuantity)"
+                      @input="handleBulkNumericInput('totalQuantity', $event)"
+                      @keydown.enter="applyBulkValue('totalQuantity')"
+                      ref="bulkInput_totalQuantity"
+                    >
+                    <button class="new-product-pricing__bulk-apply" @click="applyBulkValue('totalQuantity')">Barchasiga</button>
+                  </div>
+                </div>
+              </th>
+              <th class="new-product-pricing__th--bulk">
+                <div class="new-product-pricing__th-content">
+                  Eng kam sotish miqdori 
+                  <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('minSaleQuantity', $event)">
+                    <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <!-- Bulk Popover -->
+                  <div v-if="activeBulkColumn === 'minSaleQuantity'" class="new-product-pricing__bulk-popover" @click.stop>
+                    <input 
+                      type="text" 
+                      class="new-product-pricing__bulk-input" 
+                      placeholder="Miqdor..."
+                      :value="formatPrice(bulkInputs.minSaleQuantity)"
+                      @input="handleBulkNumericInput('minSaleQuantity', $event)"
+                      @keydown.enter="applyBulkValue('minSaleQuantity')"
+                      ref="bulkInput_minSaleQuantity"
+                    >
+                    <button class="new-product-pricing__bulk-apply" @click="applyBulkValue('minSaleQuantity')">Barchasiga</button>
+                  </div>
+                </div>
+              </th>
+              <th class="new-product-pricing__th--bulk">
+                <div class="new-product-pricing__th-content">
+                  Bahosi (so'm) 
+                  <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('price', $event)">
+                    <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <!-- Bulk Popover -->
+                  <div v-if="activeBulkColumn === 'price'" class="new-product-pricing__bulk-popover" @click.stop>
+                    <input 
+                      type="text" 
+                      class="new-product-pricing__bulk-input" 
+                      placeholder="Narx..."
+                      :value="formatPrice(bulkInputs.price)"
+                      @input="handleBulkNumericInput('price', $event)"
+                      @keydown.enter="applyBulkValue('price')"
+                      ref="bulkInput_price"
+                    >
+                    <button class="new-product-pricing__bulk-apply" @click="applyBulkValue('price')">Barchasiga</button>
+                  </div>
+                </div>
+              </th>
+              <th class="new-product-pricing__th--bulk">
+                <div class="new-product-pricing__th-content">
+                  Chegirma (so'm) 
+                  <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('discount', $event)">
+                    <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <!-- Bulk Popover -->
+                  <div v-if="activeBulkColumn === 'discount'" class="new-product-pricing__bulk-popover" @click.stop>
+                    <input 
+                      type="text" 
+                      class="new-product-pricing__bulk-input" 
+                      placeholder="Chegirma..."
+                      :value="formatPrice(bulkInputs.discount)"
+                      @input="handleBulkNumericInput('discount', $event)"
+                      @keydown.enter="applyBulkValue('discount')"
+                      ref="bulkInput_discount"
+                    >
+                    <button class="new-product-pricing__bulk-apply" @click="applyBulkValue('discount')">Barchasiga</button>
+                  </div>
+                </div>
+              </th>
+              <th>Sotish narxi, so'm</th>
+              <th>Dona uchun komissiya</th>
+              <th>Har bir dona uchun chiqarish</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, index) in sharedProduct.skuRows" :key="row.id">
+              <td class="new-product-pricing__td-center">{{ index + 1 }}</td>
+              <td>
+                <div class="new-product-pricing__cell-stack">
+                  <span class="new-product-pricing__cell-sub">{{ row.variantLabel }}</span>
+                  <input 
+                    type="text" 
+                    class="new-product-pricing__cell-input new-product-pricing__cell-input--sku"
+                    :class="{ 'new-product-pricing__cell-input--error': getRowErrors(row).sku }"
+                    v-model="row.sku"
+                    @input="handleRowSkuInput(row)"
+                  >
+                </div>
+              </td>
+              <td>
+                <input 
+                  type="text" 
+                  class="new-product-pricing__cell-input"
+                  v-model="row.barcode"
+                  placeholder="-"
+                >
+              </td>
+              <td>
+                <input 
+                  type="text" 
+                  class="new-product-pricing__select" 
+                  v-model="row.mxikCode" 
+                  placeholder="Kod yoki nomi..."
+                >
+              </td>
+              <td>
+                <span class="new-product-pricing__text-muted">
+                  {{ row.recommendedPrice ? formatPrice(row.recommendedPrice) : 'Hozircha narx topilmadi' }}
+                </span>
+              </td>
+              <td>
+                <div class="new-product-pricing__cell-input-wrap" :class="{ 'new-product-pricing__cell-input-wrap--error': getRowErrors(row).totalQuantity }">
+                  <input 
+                    type="text" 
+                    class="new-product-pricing__cell-input" 
+                    :value="formatPrice(row.totalQuantity)" 
+                    @input="handleNumericInput(row, 'totalQuantity', $event)"
+                  >
+                  <span class="new-product-pricing__cell-unit">ta</span>
+                </div>
+              </td>
+              <td>
+                <div class="new-product-pricing__cell-input-wrap" :class="{ 'new-product-pricing__cell-input-wrap--error': getRowErrors(row).minSaleQuantity }">
+                  <input 
+                    type="text" 
+                    class="new-product-pricing__cell-input" 
+                    :value="formatPrice(row.minSaleQuantity)" 
+                    @input="handleNumericInput(row, 'minSaleQuantity', $event)"
+                  >
+                  <span class="new-product-pricing__cell-unit">ta</span>
+                </div>
+              </td>
+              <td>
+                <div class="new-product-pricing__cell-input-wrap" :class="{ 'new-product-pricing__cell-input-wrap--error': getRowErrors(row).price }">
+                  <input 
+                    type="text" 
+                    class="new-product-pricing__cell-input new-product-pricing__cell-input--wide" 
+                    :value="formatPrice(row.price)" 
+                    @input="handleNumericInput(row, 'price', $event)"
+                    placeholder="0"
+                  >
+                  <span class="new-product-pricing__cell-unit">so'm</span>
+                </div>
+              </td>
+              <td>
+                <div class="new-product-pricing__cell-input-wrap" :class="{ 'new-product-pricing__cell-input-wrap--error': getRowErrors(row).discount }">
+                  <input 
+                    type="text" 
+                    class="new-product-pricing__cell-input new-product-pricing__cell-input--wide" 
+                    :value="formatPrice(row.discount)" 
+                    @input="handleNumericInput(row, 'discount', $event)"
+                    placeholder="0"
+                  >
+                  <span class="new-product-pricing__cell-unit">so'm</span>
+                </div>
+              </td>
+              <td>
+                <span class="new-product-pricing__bold">{{ formatPrice(row.sellingPrice) }}</span>
+              </td>
+              <td>
+                <div class="new-product-pricing__cell-stack">
+                  <span class="new-product-pricing__bold">{{ formatPrice(row.commissionAmount) }}</span>
+                  <span class="new-product-pricing__cell-sub">{{ commissionPercent }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="new-product-pricing__bold">{{ formatPrice(row.payoutAmount) }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Navigation Footer -->
+      <div class="new-product-pricing__footer">
+        <button class="new-product-pricing__btn-next" @click="handleNextStep">
+          Keyingi qadam
+          <svg class="new-product-pricing__btn-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -148,112 +303,321 @@ import { formatPrice } from '../utils/formatters';
 
 export default {
   name: 'NewProductPricing',
+  inject: ['sharedProduct', 'showToast'],
   data() {
     return {
-      productSku: 'Jack',
-      skuRows: [
-        { 
-          id: 1, 
-          variantName: 'Oq, W4-01', 
-          variantSku: 'oq-W4-01', 
-          barcode: '9815698156981', 
-          mxikCode: '0866132781...', 
-          recommendedPriceText: 'Hozircha narx topilmadi',
-          totalQuantity: 30,
-          minSellQuantity: 2,
-          price: 500000,
-          discount: 0,
-          commission: 20000,
-          commissionPercent: 2
-        },
-        { 
-          id: 2, 
-          variantName: 'Qora, W4-01', 
-          variantSku: 'qora-W4-01', 
-          barcode: '9815698156981', 
-          mxikCode: '0866132781...', 
-          recommendedPriceText: 'Hozircha narx topilmadi',
-          totalQuantity: 20,
-          minSellQuantity: 1,
-          price: 450000,
-          discount: 0,
-          commission: 20000,
-          commissionPercent: 2
-        },
-        { 
-          id: 3, 
-          variantName: 'Oq, C5c', 
-          variantSku: 'oq-C5c', 
-          barcode: '9815698156981', 
-          mxikCode: '0866132781...', 
-          recommendedPriceText: 'Hozircha narx topilmadi',
-          totalQuantity: 10,
-          minSellQuantity: 3,
-          price: 400000,
-          discount: 0,
-          commission: 20000,
-          commissionPercent: 2
-        },
-        { 
-          id: 4, 
-          variantName: 'Qora, C5c', 
-          variantSku: 'qora-C5c', 
-          barcode: '9815698156981', 
-          mxikCode: '0866132781...', 
-          recommendedPriceText: 'Hozircha narx topilmadi',
-          totalQuantity: 15,
-          minSellQuantity: 1,
-          price: 600000,
-          discount: 0,
-          commission: 20000,
-          commissionPercent: 2
-        },
-        { 
-          id: 5, 
-          variantName: 'Qora, A4-1', 
-          variantSku: 'qora-A4-1', 
-          barcode: '', 
-          mxikCode: '0866132781...', 
-          recommendedPriceText: 'Hozircha narx topilmadi',
-          totalQuantity: 5,
-          minSellQuantity: 1,
-          price: 300000,
-          discount: 5000,
-          commission: 0,
-          commissionPercent: 0
-        },
-        { 
-          id: 6, 
-          variantName: 'Oq, A4-1', 
-          variantSku: 'oq-A4-1', 
-          barcode: '', 
-          mxikCode: 'Kod yoki nomi', 
-          recommendedPriceText: 'Hozircha narx topilmadi',
-          totalQuantity: 0,
-          minSellQuantity: 0,
-          price: 0,
-          discount: 0,
-          commission: 0,
-          commissionPercent: 0
-        }
-      ]
+      rowErrors: {},
+      commissionPercent: 2, // Constant as requested
+      activeBulkColumn: null, // Tracks which lightning icon is clicked
+      bulkInputs: {
+        mxikCode: '',
+        totalQuantity: '',
+        minSaleQuantity: '',
+        price: '',
+        discount: ''
+      }
     };
   },
+  computed: {
+    isStepValid() {
+      // Check if there are rows and all are valid
+      if (!this.sharedProduct.skuRows || this.sharedProduct.skuRows.length === 0) return false;
+      return this.sharedProduct.skuRows.every(row => {
+        const errors = this.validateRow(row);
+        return Object.keys(errors).length === 0;
+      });
+    }
+  },
+  watch: {
+    // Watch Base SKU to update automatic row SKUs
+    'sharedProduct.productSku': {
+      handler() {
+        this.updateAutoSkus();
+      }
+    },
+    // Watch features to regenerate rows if combinations change
+    'sharedProduct.features': {
+      handler() {
+        this.generateVariantRows();
+      },
+      deep: true
+    }
+  },
+  mounted() {
+    // Generate initial rows if none exist
+    if (!this.sharedProduct.skuRows || this.sharedProduct.skuRows.length === 0) {
+      this.generateVariantRows();
+    }
+    // Global click listener to close bulk popovers
+    window.addEventListener('click', this.handleGlobalClick);
+  },
+  beforeDestroy() {
+    window.removeEventListener('click', this.handleGlobalClick);
+  },
   methods: {
-    calculateSalePrice(row) {
-      if (row.price <= 0) return 0;
-      // Demo logic: Sale price is price - discount (though image shows 1,000,000 for 500k, let's stick to logical calculation or just use image values as samples)
-      // I'll use image's visible result (1,000,000) as a fixed calc for demo if I want to match image perfectly, 
-      // but standard logic is Price - Discount. Let's do Price * 2 - Discount to match the visual 1,000,000 for 500,000? 
-      // Actually, image might show 1,000,000 as a reference. Let's just do row.price - row.discount for simplicity.
-      return Math.max(0, row.price - row.discount);
+    formatPrice,
+    
+    // Bulk Apply Logic
+    toggleBulkInput(column, event) {
+      event.stopPropagation();
+      if (this.activeBulkColumn === column) {
+        this.activeBulkColumn = null;
+      } else {
+        this.activeBulkColumn = column;
+        // Autofocus the input after it appears
+        this.$nextTick(() => {
+          const input = this.$refs[`bulkInput_${column}`];
+          if (input) input.focus();
+        });
+      }
     },
-    calculatePayout(row) {
-      const sale = this.calculateSalePrice(row);
-      if (sale <= 0) return 0;
-      return Math.max(0, sale - row.commission);
+
+    applyBulkValue(column) {
+      const value = this.bulkInputs[column];
+      if (value === '' || value === null) return;
+
+      // Use mapping to ensure Vue 2 detects the change across the entire array
+      this.sharedProduct.skuRows = this.sharedProduct.skuRows.map(row => {
+        const newRow = { ...row };
+        if (column === 'mxikCode') {
+          newRow.mxikCode = String(value);
+        } else {
+          newRow[column] = Number(value);
+          this.recalculateRow(newRow);
+        }
+        return newRow;
+      });
+
+      this.activeBulkColumn = null;
+      this.bulkInputs[column] = ''; // Reset after apply
+      this.showToast('Barcha qatorlar muvaffaqiyatli yangilandi', 'success');
+      this.validateAllRows();
     },
-    formatPrice
+
+    handleGlobalClick(event) {
+      const popover = document.querySelector('.new-product-pricing__bulk-popover');
+      if (popover && !popover.contains(event.target)) {
+        this.activeBulkColumn = null;
+      }
+    },
+    
+    // 1. Sluggify helper for SKU parts
+    slugify(text) {
+      if (!text) return '';
+      return text
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')           // Replace spaces with -
+        .replace(/[^\w-]+/g, '')         // Remove all non-word chars except -
+        .replace(/--+/g, '-')            // Replace multiple - with single -
+        .replace(/^-+/, '')               // Trim - from start of text
+        .replace(/-+$/, '');              // Trim - from end of text
+    },
+
+    // 2. Generate Variant Combination Rows (Cartesian Product)
+    generateVariantRows() {
+      const features = (this.sharedProduct.features || []).filter(f => f.items && f.items.length > 0);
+      
+      if (features.length === 0) {
+        // Handle single product with no variants
+        const singleRow = this.createNewRow([], 'Asosiy');
+        this.sharedProduct.skuRows = [singleRow];
+        return;
+      }
+
+      // Generate Cartesian Product
+      const combinations = this.cartesianProduct(features.map(f => f.items));
+      
+      // Preserve existing data for matching combinations
+      const existingRowsMap = new Map();
+      (this.sharedProduct.skuRows || []).forEach(row => {
+        existingRowsMap.set(JSON.stringify(row.variantValues), row);
+      });
+
+      const newRows = combinations.map(combo => {
+        const comboKey = JSON.stringify(combo);
+        if (existingRowsMap.has(comboKey)) {
+          return existingRowsMap.get(comboKey);
+        }
+        
+        const label = combo.join(', ');
+        return this.createNewRow(combo, label);
+      });
+
+      this.sharedProduct.skuRows = newRows;
+      this.updateAutoSkus();
+    },
+
+    cartesianProduct(arrays) {
+      return arrays.reduce((acc, curr) => {
+        const res = [];
+        acc.forEach(a => {
+          curr.forEach(b => {
+            res.push([...a, b]);
+          });
+        });
+        return res;
+      }, [[]]);
+    },
+
+    createNewRow(values, label) {
+      const row = {
+        id: Date.now() + Math.random(),
+        variantLabel: label,
+        variantValues: values,
+        sku: '',
+        isSkuManuallyEdited: false,
+        barcode: '',
+        mxikCode: '0866132781256', // Default mock
+        recommendedPrice: null,
+        totalQuantity: 0,
+        minSaleQuantity: 1,
+        price: 0,
+        discount: 0,
+        sellingPrice: 0,
+        commissionAmount: 0,
+        commissionPercent: this.commissionPercent,
+        payoutAmount: 0
+      };
+      row.sku = this.buildSku(row);
+      return row;
+    },
+
+    // 3. SKU Building Logic
+    buildSku(row) {
+      if (row.isSkuManuallyEdited) return row.sku;
+      
+      const base = this.slugify(this.sharedProduct.productSku) || 'sku';
+      const parts = row.variantValues.map(v => this.slugify(v));
+      
+      return [base, ...parts].filter(Boolean).join('-');
+    },
+
+    updateAutoSkus() {
+      (this.sharedProduct.skuRows || []).forEach(row => {
+        if (!row.isSkuManuallyEdited) {
+          row.sku = this.buildSku(row);
+        }
+      });
+    },
+
+    handleRowSkuInput(row) {
+      row.isSkuManuallyEdited = !!row.sku;
+      this.validateAllRows();
+    },
+
+    // 4. Recalculation Logic
+
+    handleNumericInput(row, field, event) {
+      const val = event.target.value.replace(/\D/g, '');
+      let finalVal = val ? parseInt(val) : 0;
+      
+      // minSaleQuantity shouldn't be less than 1
+      if (field === 'minSaleQuantity' && finalVal < 1) {
+        finalVal = 1;
+      }
+      
+      row[field] = finalVal;
+      this.recalculateRow(row);
+      // Force update to show space separators
+      this.$nextTick(() => {
+        event.target.value = this.formatPrice(row[field]);
+      });
+    },
+
+    handleBulkNumericInput(field, event) {
+      const val = event.target.value.replace(/\D/g, '');
+      let finalVal = val ? parseInt(val) : 0;
+      
+      // minSaleQuantity shouldn't be less than 1
+      if (field === 'minSaleQuantity' && finalVal < 1) {
+        finalVal = 1;
+      }
+      
+      this.bulkInputs[field] = finalVal;
+      this.$nextTick(() => {
+        event.target.value = this.formatPrice(this.bulkInputs[field]);
+      });
+    },
+
+    recalculateRow(row) {
+      // 1. Selling Price
+      row.sellingPrice = Math.max(0, Number(row.price) - Number(row.discount));
+      
+      // 2. Commission
+      row.commissionAmount = Math.round((row.sellingPrice * this.commissionPercent) / 100);
+      
+      // 3. Payout
+      row.payoutAmount = Math.max(0, row.sellingPrice - row.commissionAmount);
+      
+      this.validateRow(row);
+    },
+
+    recalculateAllRows() {
+      (this.sharedProduct.skuRows || []).forEach(row => this.recalculateRow(row));
+    },
+
+    // 5. Validation Logic
+    validateRow(row) {
+      const errors = {};
+      
+      if (!row.sku || !row.sku.trim()) {
+        errors.sku = 'SKU bo\'sh bo\'lmasin';
+      }
+      
+      // Check for duplicate SKUs across all rows
+      const otherSkus = this.sharedProduct.skuRows
+        .filter(r => r.id !== row.id)
+        .map(r => (r.sku || '').trim().toLowerCase());
+      
+      if (row.sku && otherSkus.includes(row.sku.trim().toLowerCase())) {
+        errors.sku = 'Bunday SKU allaqachon mavjud';
+      }
+
+      if (Number(row.totalQuantity) < 0) {
+        errors.totalQuantity = 'Miqdor manfiy bo\'lmasin';
+      }
+
+      if (Number(row.minSaleQuantity) < 1) {
+        errors.minSaleQuantity = 'Eng kam 1 ta bo\'lishi kerak';
+      }
+
+      if (Number(row.price) < 0) {
+        errors.price = 'Narx manfiy bo\'lmasin';
+      }
+
+      if (Number(row.discount) > Number(row.price)) {
+        errors.discount = 'Chegirma narxdan katta bo\'lmasin';
+      }
+
+      this.$set(this.rowErrors, row.id, errors);
+      return errors;
+    },
+
+    validateAllRows() {
+      let firstError = null;
+      (this.sharedProduct.skuRows || []).forEach(row => {
+        const err = this.validateRow(row);
+        if (Object.keys(err).length > 0 && !firstError) {
+          firstError = Object.values(err)[0];
+        }
+      });
+      return firstError;
+    },
+
+    getRowErrors(row) {
+      return this.rowErrors[row.id] || {};
+    },
+
+    handleNextStep() {
+      const errorMsg = this.validateAllRows();
+      if (errorMsg) {
+        this.showToast(errorMsg, 'error');
+        return;
+      }
+      this.$emit('change-step', 3);
+    }
   }
 };
 </script>
@@ -339,6 +703,128 @@ export default {
   margin: 0;
 }
 
+/* Bulk Apply Header Styles */
+.new-product-pricing__th--bulk {
+  position: relative;
+}
+
+.new-product-pricing__th-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  flex-wrap: wrap; /* Allow icon to wrap if needed or text to wrap around it */
+  min-height: 40px;
+}
+
+.new-product-pricing__bulk-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FFB800 0%, #FF8A00 100%);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  box-shadow: 0 4px 6px -1px rgba(255, 138, 0, 0.2), 0 2px 4px -2px rgba(255, 138, 0, 0.1);
+}
+
+.new-product-pricing__bulk-btn:hover {
+  background: linear-gradient(135deg, #FFC837 0%, #FF8008 100%);
+  transform: scale(1.2) rotate(-5deg);
+  box-shadow: 0 0 15px rgba(255, 184, 0, 0.6);
+}
+
+.new-product-pricing__bulk-icon {
+  width: 14px;
+  height: 14px;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
+}
+
+.new-product-pricing__bulk-icon path {
+  fill: #FFFFFF;
+  stroke: #FFFFFF;
+  stroke-width: 1;
+}
+
+.new-product-pricing__bulk-popover {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 180px;
+}
+
+.new-product-pricing__bulk-popover::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #ffffff;
+  z-index: 101;
+}
+
+.new-product-pricing__bulk-popover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 9px solid #E2E8F0;
+  margin-bottom: 0px;
+}
+
+.new-product-pricing__bulk-input {
+  width: 100%;
+  height: 36px;
+  border: 1.5px solid #DFE2E9!important;
+  border-radius: 8px!important;
+  padding: 0 12px!important;
+  font-size: 13px!important;
+  outline: none!important;
+  box-sizing: border-box!important;
+  background-color: #fff!important;
+  text-align: left!important;
+}
+
+.new-product-pricing__bulk-input:focus {
+  border-color: #22c55e!important;
+}
+
+.new-product-pricing__bulk-apply {
+  background-color: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.new-product-pricing__bulk-apply:hover {
+  background-color: #16a34a;
+}
+
 /* SKU Input Section */
 .new-product-pricing__input-group {
   display: flex;
@@ -386,16 +872,16 @@ export default {
 /* Table Section */
 .new-product-pricing__table-wrapper {
   width: 100%;
-  overflow-x: auto;
   background-color: #ffffff;
   border-radius: 12px;
   border: 1px solid #DFE2E9;
+  overflow: hidden; /* Remove scroll */
 }
 
 .new-product-pricing__table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 12px;
   table-layout: fixed;
 }
 
@@ -404,29 +890,29 @@ export default {
   color: #374151;
   font-weight: 600;
   text-align: center;
-  padding: 12px 6px;
+  padding: 10px 4px;
   border-bottom: 1px solid #DFE2E9;
   border-right: 1px solid #DFE2E9;
-  line-height: 1.3;
+  line-height: 1.2;
   vertical-align: middle;
 }
 
-/* Specific column widths for fluid percentage layout */
-.new-product-pricing__table th:nth-child(1) { width: 4%; min-width: 30px; } /* № */
-.new-product-pricing__table th:nth-child(2) { width: 9%; min-width: 90px; } /* Sotuvchi kodi */
-.new-product-pricing__table th:nth-child(3) { width: 11%; min-width: 90px; } /* Shtrix-kod */
-.new-product-pricing__table th:nth-child(4) { width: 11%; min-width: 120px; } /* MXIK */
-.new-product-pricing__table th:nth-child(5) { width: 8%; min-width: 80px; } /* Tavsiya narx */
-.new-product-pricing__table th:nth-child(6) { width: 6%; min-width: 60px; } /* Barcha miqdor */
-.new-product-pricing__table th:nth-child(7) { width: 6%; min-width: 60px; } /* Eng kam sotish */
-.new-product-pricing__table th:nth-child(8) { width: 13%; min-width: 120px; } /* Bahosi */
-.new-product-pricing__table th:nth-child(9) { width: 11%; min-width: 100px; } /* Chegirma */
-.new-product-pricing__table th:nth-child(10) { width: 7%; min-width: 90px; } /* Sotish narxi */
-.new-product-pricing__table th:nth-child(11) { width: 8%; min-width: 70px; } /* Komissiya */
-.new-product-pricing__table th:nth-child(12) { width: 6%; min-width: 60px; } /* Chiqarish */
+/* Precise column widths to fit 12 columns without scroll */
+.new-product-pricing__table th:nth-child(1) { width: 3%; } /* № */
+.new-product-pricing__table th:nth-child(2) { width: 10%; } /* Sotuvchi kodi */
+.new-product-pricing__table th:nth-child(3) { width: 10%; } /* Shtrix-kod */
+.new-product-pricing__table th:nth-child(4) { width: 10%; } /* MXIK */
+.new-product-pricing__table th:nth-child(5) { width: 9%; } /* Tavsiya narx */
+.new-product-pricing__table th:nth-child(6) { width: 7%; } /* Miqdori */
+.new-product-pricing__table th:nth-child(7) { width: 7%; } /* Min. sotuv */
+.new-product-pricing__table th:nth-child(8) { width: 10%; } /* Bahosi */
+.new-product-pricing__table th:nth-child(9) { width: 9%; } /* Chegirma */
+.new-product-pricing__table th:nth-child(10) { width: 9%; } /* Sotish narxi */
+.new-product-pricing__table th:nth-child(11) { width: 8%; } /* Komissiya */
+.new-product-pricing__table th:nth-child(12) { width: 8%; } /* Chiqarish */
 
 .new-product-pricing__table td {
-  padding: 10px 6px;
+  padding: 8px 4px;
   border-bottom: 1px solid #DFE2E9;
   border-right: 1px solid #DFE2E9;
   vertical-align: middle;
@@ -484,17 +970,61 @@ export default {
 }
 
 .new-product-pricing__cell-input {
-  border: none;
+  border: 1.5px solid #DFE2E9;
+  border-radius: 8px;
+  height: 36px;
   outline: none;
-  width: 40px;
+  width: 100%;
   font-size: 13px;
   color: #111827;
   font-family: inherit;
   text-align: center;
+  background-color: #fff;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.new-product-pricing__cell-input:focus {
+  border-color: #22c55e;
+}
+
+.new-product-pricing__cell-input-wrap .new-product-pricing__cell-input {
+  border: none;
+  width: auto;
+  min-width: 40px;
+  max-width: 100%;
+  height: 100%;
+  background-color: transparent;
 }
 
 .new-product-pricing__cell-input--wide {
   width: 80px;
+}
+
+.new-product-pricing__cell-input--sku {
+  width: 100%;
+  border: 1.5px solid #DFE2E9;
+  border-radius: 8px;
+  height: 36px;
+  margin-top: 4px;
+  background-color: #F9FAFB;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.new-product-pricing__cell-input--sku:focus {
+  background-color: #ffffff;
+  border-color: #22c55e;
+}
+
+.new-product-pricing__cell-input--error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.new-product-pricing__cell-input-wrap--error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
 }
 
 .new-product-pricing__cell-unit {
@@ -510,6 +1040,48 @@ export default {
 
 .new-product-pricing__text-muted {
   color: #9ca3af;
+}
+
+/* Navigation Footer */
+.new-product-pricing__footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #F1F5F9;
+}
+
+.new-product-pricing__btn-next {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  padding: 0 32px;
+  background-color: #22c55e;
+  border: none;
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.2);
+  font-family: inherit;
+}
+
+.new-product-pricing__btn-next:hover {
+  background-color: #16a34a;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3);
+}
+
+.new-product-pricing__btn-next:active {
+  transform: translateY(0);
+}
+
+.new-product-pricing__btn-arrow {
+  width: 20px;
+  height: 20px;
 }
 
 /* Responsive */

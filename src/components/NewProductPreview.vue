@@ -11,14 +11,14 @@
         <div class="new-product-preview__gallery">
           <div class="new-product-preview__thumbnails">
             <div 
-              v-for="(img, index) in galleryImages" 
+              v-for="(item, index) in allGalleryItems" 
               :key="'thumb-' + index"
               class="new-product-preview__thumb"
               :class="{ 'new-product-preview__thumb--active': selectedImageIndex === index }"
               @click="selectedImageIndex = index"
             >
-              <img :src="img" alt="Thumbnail" class="new-product-preview__thumb-img">
-              <div v-if="index === galleryImages.length - 1" class="new-product-preview__thumb-overlay">
+              <img :src="item.url" alt="Thumbnail" class="new-product-preview__thumb-img">
+              <div v-if="item.type === 'video'" class="new-product-preview__thumb-overlay">
                  <svg class="new-product-preview__play-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M8 5v14l11-7z"/>
                  </svg>
@@ -33,10 +33,12 @@
                     <polyline points="15 18 9 12 15 6"></polyline>
                   </svg>
                 </button>
-                <img :src="galleryImages[selectedImageIndex]" alt="Product" class="new-product-preview__main-img">
+                <img :src="allGalleryItems[selectedImageIndex] ? allGalleryItems[selectedImageIndex].url : ''" alt="Product" class="new-product-preview__main-img">
              </div>
              <div class="new-product-preview__main-img-wrap new-product-preview__main-img-wrap--secondary">
-                <img :src="galleryImages[(selectedImageIndex + 1) % galleryImages.length]" alt="Product" class="new-product-preview__main-img">
+                <template v-if="allGalleryItems.length > 1">
+                  <img :src="allGalleryItems[(selectedImageIndex + 1) % allGalleryItems.length].url" alt="Product" class="new-product-preview__main-img">
+                </template>
                 <button class="new-product-preview__nav-btn new-product-preview__nav-btn--right" @click="nextImg">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="9 18 15 12 9 6"></polyline>
@@ -50,30 +52,33 @@
         <div class="new-product-preview__description">
           <h2 class="new-product-preview__section-title">Описание</h2>
           
-          <ul class="new-product-preview__spec-list">
-            <li v-for="(spec, sIndex) in specs" :key="'spec-' + sIndex">
-              <span class="new-product-preview__spec-icon">{{ spec.icon }}</span>
-              {{ spec.label }}: {{ spec.value }}
-            </li>
-          </ul>
-
-          <div class="new-product-preview__desc-text">
-            <p>Motor quvvati: Odatda 1000W dan 1800W gacha bo'lgan cho'tkasiz (brushless) motor.</p>
-            <p>Akkumulyator: 5 yoki 6 ta akkumulyatordan iborat bo'lib, odatda 60V yoki 72V kuchlanishda ishlaydi.</p>
-            <p>Yurish masofasi (bir quvvatda): To'liq quvvat bilan 50 km dan 100 km gacha masofani bosib o'tishi mumkin (yukning og'irligiga qarab).</p>
-            <p>Quvvatlanish vaqti: Taxminan 6-8 soat.</p>
+          <div v-if="!activeSpecs.isManual" class="new-product-preview__spec-groups">
+            <div v-for="(group, gIndex) in activeSpecs.groups" :key="'group-' + gIndex" class="new-product-preview__spec-group">
+              <div class="new-product-preview__spec-group-header">
+                <span class="new-product-preview__spec-group-icon">{{ group.icon }}</span>
+                <h4 class="new-product-preview__spec-group-title">{{ group.title }}</h4>
+              </div>
+              <ul class="new-product-preview__spec-items">
+                <li v-for="(item, iIndex) in group.items" :key="'item-' + iIndex" class="new-product-preview__spec-item">
+                  <span class="new-product-preview__spec-bullet">•</span>
+                  <span class="new-product-preview__spec-text">{{ item }}</span>
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <div class="new-product-preview__extra-img-wrap">
-            <img src="https://images.unsplash.com/photo-1541443131876-44b03de101c5?auto=format&fit=crop&w=1200&q=80" alt="Extra Preview" class="new-product-preview__extra-img">
+          <div v-else class="new-product-preview__desc-text">
+            {{ displayDescription }}
           </div>
 
-          <div class="new-product-preview__desc-blocks">
-             <div v-for="(block, bIndex) in descBlocks" :key="'block-' + bIndex" class="new-product-preview__desc-block">
-                <h4 class="new-product-preview__desc-block-title">
-                  {{ block.icon }} {{ block.title }}
-                </h4>
-                <p class="new-product-preview__desc-block-content">{{ block.content }}</p>
+          <!-- Video Preview (Only if video exists) -->
+          <div v-if="sharedProduct.video && sharedProduct.video.videoId" class="new-product-preview__extra-img-wrap">
+             <div class="new-product-preview__video-placeholder">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="white" stroke-width="2"/>
+                  <path d="M10 8L16 12L10 16V8Z" fill="white"/>
+                </svg>
+                <span>Video ko'rish</span>
              </div>
           </div>
         </div>
@@ -81,40 +86,43 @@
 
       <!-- Right Sidebar Area -->
       <aside class="new-product-preview__sidebar">
-        <!-- Options Section -->
+        <!-- Dynamic Options Section -->
         <div class="new-product-preview__options-section">
-          <div class="new-product-preview__option-group">
-            <label class="new-product-preview__option-label">Rang</label>
-            <div class="new-product-preview__color-grid">
+          <!-- Features Loop -->
+          <div v-for="feat in availableFeatures" :key="feat.title" class="new-product-preview__option-group">
+            <label class="new-product-preview__option-label">{{ feat.title }}</label>
+            
+            <!-- Color Special Layout -->
+            <div v-if="feat.isColor" class="new-product-preview__color-grid">
               <div 
-                v-for="color in colorVariants" 
-                :key="color.id"
+                v-for="val in feat.values" 
+                :key="val"
                 class="new-product-preview__color-item"
                 :class="{ 
-                  'new-product-preview__color-item--active': selectedColor === color.id,
-                  'new-product-preview__color-item--disabled': color.disabled
+                  'new-product-preview__color-item--active': selectedFeatures[feat.title] === val 
                 }"
-                @click="!color.disabled && (selectedColor = color.id)"
+                @click="selectFeature(feat.title, val)"
               >
-                <img :src="color.img" alt="Color" class="new-product-preview__color-img">
+                <div 
+                  class="new-product-preview__color-circle" 
+                  :style="{ backgroundColor: getColorHex(val) }"
+                ></div>
+                <span class="new-product-preview__color-tooltip">{{ val }}</span>
               </div>
             </div>
-          </div>
 
-          <div class="new-product-preview__option-group">
-            <label class="new-product-preview__option-label">Xususiyatlar</label>
-            <div class="new-product-preview__chip-grid">
+            <!-- Chips Layout (Size, Memory, etc.) -->
+            <div v-else class="new-product-preview__chip-grid">
               <div 
-                v-for="feature in featureVariants" 
-                :key="feature"
+                v-for="val in feat.values" 
+                :key="val"
                 class="new-product-preview__chip"
                 :class="{ 
-                  'new-product-preview__chip--active': selectedFeature === feature,
-                  'new-product-preview__chip--disabled': feature === '512 GB'
+                  'new-product-preview__chip--active': selectedFeatures[feat.title] === val
                 }"
-                @click="feature !== '512 GB' && (selectedFeature = feature)"
+                @click="selectFeature(feat.title, val)"
               >
-                {{ feature }}
+                {{ val }}
               </div>
             </div>
           </div>
@@ -123,11 +131,15 @@
         <!-- Pricing & CTA Card -->
         <div class="new-product-preview__card">
           <div class="new-product-preview__price-section">
-            <h2 class="new-product-preview__price-main">{{ formatPrice(price) }} so'm</h2>
+            <div v-if="displayDiscountPercent > 0" class="new-product-preview__price-comparison">
+               <span class="new-product-preview__price-old">{{ formatPrice(displayPrice) }} so'm</span>
+               <span class="new-product-preview__price-discount">-{{ displayDiscountPercent }}%</span>
+            </div>
+            <h2 class="new-product-preview__price-main">{{ formatPrice(displaySellingPrice) }} so'm</h2>
             
             <div class="new-product-preview__price-detail-box">
               <span class="new-product-preview__price-arrow-up">&uarr;</span>
-              <span class="new-product-preview__price-detail-text">{{ formatPrice(price) }} so'm</span>
+              <span class="new-product-preview__price-detail-text">{{ formatPrice(displaySellingPrice) }} so'm</span>
               <svg class="new-product-preview__price-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M9 5l7 7-7 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -138,8 +150,8 @@
           
           <!-- Badges -->
           <div class="new-product-preview__info-badges">
-            <div class="new-product-preview__info-badge new-product-preview__info-badge--danger">
-              <span class="new-product-preview__badge-icon">🔥</span> Faqat 10 dona qoldi
+            <div v-if="displayStock <= 10" class="new-product-preview__info-badge new-product-preview__info-badge--danger">
+              <span class="new-product-preview__badge-icon">🔥</span> Faqat {{ displayStock }} dona qoldi
             </div>
             <div class="new-product-preview__info-badge new-product-preview__info-badge--warning">
               <span class="new-product-preview__badge-icon">⭐</span> Bu haftada birinchi bo'lib sotib oling
@@ -202,52 +214,26 @@ import { formatPrice } from '../utils/formatters';
 
 export default {
   name: 'NewProductPreview',
+  inject: ['sharedProduct'],
   data() {
     return {
-      productTitle: 'Уч гилдиракли Мотороллер',
-      selectedImageIndex: 2,
+      selectedImageIndex: 0,
       isPhoneVisible: false,
-      galleryImages: [
-        'https://images.unsplash.com/photo-1541443131876-44b03de101c5?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=80'
+      selectedFeatures: {}, // { "Rang": "Oq", "Size": "M" }
+      predefinedColors: [
+        { name: "Oq", hex: "#FFFFFF" },
+        { name: "Qora", hex: "#000000" },
+        { name: "Qizil", hex: "#EF4444" },
+        { name: "Ko'k", hex: "#3B82F6" },
+        { name: "Sariq", hex: "#F59E0B" },
+        { name: "Yashil", hex: "#10B981" },
+        { name: "Kulrang", hex: "#9CA3AF" },
+        { name: "Pushti", hex: "#EC4899" },
+        { name: "Apelsin", hex: "#F97316" }, 
+        { name: "Jigarrang", hex: "#8B5A2B" }, 
+        { name: "Binafsha", hex: "#8B5CF6" }, 
+        { name: "Och ko'k", hex: "#0EA5E9" }
       ],
-      specs: [
-        { icon: '⚙️', label: 'Мотори', value: '1500w' },
-        { icon: '🧠', label: 'Мияси', value: '1500w' },
-        { icon: '🔘', label: 'Балон', value: '5.00 12 диска' },
-        { icon: '📦', label: 'Yuk vazni', value: '1000kg' },
-        { icon: '⚡', label: 'Bir zaryadkada', value: '60-90 km yuradi' },
-        { icon: '🔋', label: 'Аккумлятори', value: '58AH 60V' },
-        { icon: '🌟', label: 'Сифати А`ло даражада', value: '' },
-        { icon: '📐', label: 'Борт ҳажми', value: '180×130 см' },
-        { icon: '⚡', label: 'Электр Тизими ва Қувват', value: '' }
-      ],
-      descBlocks: [
-        { 
-          icon: '📦', 
-          title: 'Yuk Tashish Imkoniyatlari', 
-          content: 'Yuk ko\'tarish quvvati: Modeliga qarab 500 kg dan 1200 kg gacha. Bort o\'lchami: O\'rtacha 1.5m dan 1.8m gacha uzunlikdagi bortga ega. Tezlik: Maksimal tezligi soatiga 30-50 km oralig\'ida.' 
-        },
-        { 
-          icon: '🛠️', 
-          title: 'Konstruksiya va Qulayliklar', 
-          content: 'Tormoz tizimi: Old va orqa barabanli yoki gidravlik tormozlar. Transmissiya: Past va baland uzatmalar (ponijenniy peredacha) tizimi mavjud bo\'lib, bu og\'ir yuk bilan tepalikka chiqishda yordam beradi. Qo\'shimchalar: LED faralar, signalizatsiya tizimi va ba\'zi modellarda kabina (yomg\'irdan himoya) mavjud.' 
-        }
-      ],
-      colorVariants: [
-        { id: 1, img: 'https://images.unsplash.com/photo-1541443131876-44b03de101c5?auto=format&fit=crop&w=100&q=80', disabled: false },
-        { id: 2, img: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=100&q=80', disabled: false },
-        { id: 3, img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=100&q=80', disabled: true },
-        { id: 4, img: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=100&q=80', disabled: false }
-      ],
-      selectedColor: 1,
-      featureVariants: ['128 GB', '256 GB', '512 GB'],
-      selectedFeature: '128 GB',
-      price: 33000000,
       payments: [
         { id: 1, name: 'Oilakredit', icon: 'https://img.icons8.com/color/48/000000/leaf.png' },
         { id: 2, name: 'Bank krediti', icon: 'https://img.icons8.com/color/48/000000/museum.png' },
@@ -256,12 +242,134 @@ export default {
       ]
     };
   },
+  created() {
+    this.initSelections();
+  },
+  computed: {
+    productTitle() {
+      // Prefer Russian because original UI was in Russian for product name
+      return this.sharedProduct.title_ru || this.sharedProduct.title || 'Новый товар';
+    },
+
+    availableFeatures() {
+      return (this.sharedProduct.features || []).map(f => ({
+        title: f.title,
+        values: f.items,
+        isColor: f.title === 'Rang / Цвет'
+      }));
+    },
+
+    currentSkuRow() {
+      if (!this.sharedProduct.skuRows || this.sharedProduct.skuRows.length === 0) return null;
+      
+      return this.sharedProduct.skuRows.find(row => {
+        return row.variantValues.every(val => {
+          return Object.values(this.selectedFeatures).includes(val);
+        });
+      }) || this.sharedProduct.skuRows[0];
+    },
+
+    displayPrice() {
+      return this.currentSkuRow ? this.currentSkuRow.price : 0;
+    },
+    displaySellingPrice() {
+       return this.currentSkuRow ? (this.currentSkuRow.sellingPrice || this.currentSkuRow.price) : 0;
+    },
+    displayDiscountPercent() {
+      if (!this.currentSkuRow || !this.currentSkuRow.price) return 0;
+      const disc = this.currentSkuRow.discount || 0;
+      return Math.round((disc / this.currentSkuRow.price) * 100);
+    },
+    displayStock() {
+       return this.currentSkuRow ? this.currentSkuRow.totalQuantity : 0;
+    },
+
+    allGalleryItems() {
+      const items = [];
+      const p = this.sharedProduct;
+
+      // 1. Color specific images first (if color selected)
+      const selectedColor = this.selectedFeatures['Rang / Цвет'];
+      if (selectedColor && p.colorMedia && p.colorMedia[selectedColor]) {
+        p.colorMedia[selectedColor].forEach(id => {
+          if (id) items.push({ type: 'image', url: this.getImageUrl(id) });
+        });
+      }
+
+      // 2. Add General Images
+      if (p.images && p.images.length > 0) {
+        p.images.forEach(img => {
+          items.push({ type: 'image', url: this.getImageUrl(img) });
+        });
+      }
+
+      // 3. Add Video at the end
+      if (p.video && p.video.videoId) {
+        // Mock video thumbnail
+        items.push({ 
+          type: 'video', 
+          url: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=600&q=80',
+          videoId: p.video.videoId 
+        });
+      }
+
+      // Fallback
+      if (items.length === 0) {
+        items.push({ type: 'image', url: 'https://images.unsplash.com/photo-1541443131876-44b03de101c5?auto=format&fit=crop&w=600&q=80' });
+      }
+
+      return items;
+    },
+
+    activeSpecs() {
+      const specsState = this.sharedProduct.specs;
+      if (!specsState) return { isManual: true, groups: [] };
+      
+      if (specsState.selectedVariant !== 'manual' && specsState.variants && specsState.variants.length > 0) {
+        const variant = specsState.variants.find(v => v.id === specsState.selectedVariant) || specsState.variants[0];
+        return {
+          isManual: false,
+          groups: variant.ru?.groups || variant.uz?.groups || []
+        };
+      }
+      
+      return { isManual: true, groups: [] };
+    },
+
+    displayDescription() {
+      // Show both if available, otherwise fallback
+      const ru = this.sharedProduct.specs.manualRu || '';
+      const uz = this.sharedProduct.specs.manualUz || '';
+      if (ru && uz) return `${ru}\n\n${uz}`;
+      return ru || uz || '';
+    }
+  },
   methods: {
+    initSelections() {
+      (this.sharedProduct.features || []).forEach(f => {
+        if (f.items && f.items.length > 0) {
+          this.$set(this.selectedFeatures, f.title, f.items[0]);
+        }
+      });
+    },
+    selectFeature(featTitle, value) {
+      this.$set(this.selectedFeatures, featTitle, value);
+      this.selectedImageIndex = 0; // Reset gallery to first matching item
+    },
+    getColorHex(name) {
+      const c = this.predefinedColors.find(pc => pc.name === name);
+      return c ? c.hex : '#D1D5DB';
+    },
+    getImageUrl(id) {
+      if (!id) return '';
+      if (id.startsWith('http')) return id;
+      return `https://api.cabinet.smart-market.uz/uploads/images/${id}`;
+    },
     nextImg() {
-      this.selectedImageIndex = (this.selectedImageIndex + 1) % this.galleryImages.length;
+      this.selectedImageIndex = (this.selectedImageIndex + 1) % this.allGalleryItems.length;
     },
     prevImg() {
-      this.selectedImageIndex = (this.selectedImageIndex - 1 + this.galleryImages.length) % this.galleryImages.length;
+      this.selectedImageIndex = (this.selectedImageIndex - 1 + this.allGalleryItems.length) % this.allGalleryItems.length;
     },
     formatPrice
   }
@@ -309,6 +417,18 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  height: 444px; /* Matches 6 thumbnails (6*64 + 5*12) */
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Hide scrollbar but keep functionality */
+.new-product-preview__thumbnails::-webkit-scrollbar {
+  width: 4px;
+}
+.new-product-preview__thumbnails::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 4px;
 }
 
 .new-product-preview__thumb {
@@ -353,13 +473,31 @@ export default {
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   min-width: 0;
+  height: 444px; /* Strictly match thumbnail stack height */
 }
 
 .new-product-preview__main-img-wrap {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
-  height: 480px;
+  background-color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.new-product-preview__spec-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.new-product-preview__spec-text {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
 }
 
 .new-product-preview__main-img {
@@ -410,21 +548,58 @@ export default {
   margin: 0 0 20px 0;
 }
 
-.new-product-preview__spec-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 24px 0;
+.new-product-preview__spec-groups {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 32px;
+  margin-bottom: 32px;
 }
 
-.new-product-preview__spec-list li {
-  font-size: 14px;
-  color: #4b5563;
+.new-product-preview__spec-group-header {
   display: flex;
   align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.new-product-preview__spec-group-icon {
+  font-size: 20px;
+}
+
+.new-product-preview__spec-group-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.new-product-preview__spec-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.new-product-preview__spec-item {
+  display: flex;
+  align-items: flex-start;
   gap: 10px;
+  padding-left: 4px;
+}
+
+.new-product-preview__spec-bullet {
+  color: #9ca3af;
+  font-size: 18px;
+  line-height: 1;
+  margin-top: -2px;
+}
+
+.new-product-preview__spec-text {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
 }
 
 .new-product-preview__desc-text {
@@ -432,6 +607,7 @@ export default {
   color: #6b7280;
   line-height: 1.6;
   margin-bottom: 24px;
+  white-space: pre-wrap;
 }
 
 .new-product-preview__extra-img-wrap {
@@ -465,6 +641,27 @@ export default {
   line-height: 1.6;
 }
 
+/* Video Placeholder */
+.new-product-preview__video-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: #1f2937;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: inherit;
+}
+
+.new-product-preview__video-placeholder:hover {
+  background-color: #111827;
+}
+
 /* Sidebar Area */
 .new-product-preview__sidebar {
   display: flex;
@@ -496,22 +693,55 @@ export default {
 }
 
 .new-product-preview__color-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
 .new-product-preview__color-item {
-  aspect-ratio: 1;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 2.5px solid transparent;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  padding: 3px;
+  border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.2s;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .new-product-preview__color-item--active {
   border-color: #fbbf24;
+}
+
+.new-product-preview__color-circle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.new-product-preview__color-tooltip {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #374151;
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.new-product-preview__color-item:hover .new-product-preview__color-tooltip {
+  opacity: 1;
 }
 
 .new-product-preview__color-item--disabled {

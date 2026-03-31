@@ -6,13 +6,24 @@
       <!-- AI Alert -->
       <div class="new-product-specs__alert">
         <div class="new-product-specs__alert-icon-box">
-          <svg class="new-product-specs__alert-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <svg v-if="!sharedProduct.specs.isGeneratingAI" class="new-product-specs__alert-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2l1.65 5.56L19 9l-5.35 1.44L12 16l-1.65-5.56L5 9l5.35-1.44L12 2zM19 15l.82 2.78L22.5 18.5l-2.68.72L19 22l-.82-2.78L15.5 18.5l2.68-.72L19 15zM5 15l.82 2.78L8.5 18.5l-2.68.72L5 22l-.82-2.78L1.5 18.5l2.68-.72L5 15z" />
           </svg>
+          <div v-else class="new-product-specs__loader"></div>
         </div>
-        <p class="new-product-specs__alert-text">
-          Biz sizning mahsulotingizning texnik parametrlari haqida Suniy Intellekt yordamida ma'lumotlar yig'dik. Quyida ulardan bir nechtasini ko'rishingiz mumkin. Agar biz bergan ma'lumotlar mos kelmasa quyida qo'lda kiritish imkoniyati mavjud.
-        </p>
+        <div class="new-product-specs__alert-content">
+          <p class="new-product-specs__alert-text">
+            Biz sizning mahsulotingizning texnik parametrlari haqida Suniy Intellekt yordamida ma'lumotlar yig'dik. Quyida ulardan bir nechtasini ko'rishingiz mumkin. Agar biz bergan ma'lumotlar mos kelmasa quyida qo'lda kiritish imkoniyati mavjud.
+          </p>
+          <button 
+            class="new-product-specs__ai-btn" 
+            @click="generateSpecsWithAI"
+            :disabled="sharedProduct.specs.isGeneratingAI || (!sharedProduct.title && !sharedProduct.title_ru)"
+          >
+            {{ sharedProduct.specs.isGeneratingAI ? 'Yaratilmoqda...' : 'AI orqali variantlarni yaratish' }}
+          </button>
+          <p v-if="sharedProduct.specs.aiError" class="new-product-specs__ai-error">{{ sharedProduct.specs.aiError }}</p>
+        </div>
       </div>
 
       <!-- Link -->
@@ -25,14 +36,14 @@
 
         <!-- Pre-defined Variants -->
         <div 
-          v-for="variant in variants" 
+          v-for="variant in sharedProduct.specs.variants" 
           :key="'variant-' + variant.id" 
           class="new-product-specs__option"
-          :class="{ 'new-product-specs__option--active': form.selectedVariant === variant.id, 'new-product-specs__option--inactive': form.selectedVariant !== variant.id }"
-          @click="form.selectedVariant = variant.id"
+          :class="{ 'new-product-specs__option--active': sharedProduct.specs.selectedVariant === variant.id, 'new-product-specs__option--inactive': sharedProduct.specs.selectedVariant !== variant.id }"
+          @click="sharedProduct.specs.selectedVariant = variant.id"
         >
-          <div class="new-product-specs__radio-label">
-            <input type="radio" :value="variant.id" v-model="form.selectedVariant" class="new-product-specs__radio-input">
+          <div class="new-product-specs__radio-label" :class="{ 'new-product-specs__radio-label--disabled': !sharedProduct.title }">
+            <input type="radio" :value="variant.id" v-model="sharedProduct.specs.selectedVariant" class="new-product-specs__radio-input" :disabled="!sharedProduct.title">
             <span class="new-product-specs__radio-custom"></span>
           </div>
           <div class="new-product-specs__variants">
@@ -77,11 +88,11 @@
         <!-- Manual Entry Option -->
         <div 
           class="new-product-specs__option new-product-specs__option--manual"
-          :class="{ 'new-product-specs__option--active': form.selectedVariant === 'manual', 'new-product-specs__option--inactive': form.selectedVariant !== 'manual' }"
-          @click="form.selectedVariant = 'manual'"
+          :class="{ 'new-product-specs__option--active': sharedProduct.specs.selectedVariant === 'manual', 'new-product-specs__option--inactive': sharedProduct.specs.selectedVariant !== 'manual' }"
+          @click="sharedProduct.specs.selectedVariant = 'manual'"
         >
-          <div class="new-product-specs__radio-label">
-            <input type="radio" value="manual" v-model="form.selectedVariant" class="new-product-specs__radio-input">
+          <div class="new-product-specs__radio-label" :class="{ 'new-product-specs__radio-label--disabled': !sharedProduct.title }">
+            <input type="radio" value="manual" v-model="sharedProduct.specs.selectedVariant" class="new-product-specs__radio-input" :disabled="!sharedProduct.title">
             <span class="new-product-specs__radio-custom"></span>
           </div>
           <div class="new-product-specs__variants">
@@ -91,8 +102,8 @@
               </h4>
               <textarea 
                 class="new-product-specs__textarea" 
-                v-model="form.manualUz"
-                :disabled="form.selectedVariant !== 'manual'"
+                v-model="sharedProduct.specs.manualUz"
+                :disabled="sharedProduct.specs.selectedVariant !== 'manual' || !sharedProduct.title"
               ></textarea>
             </div>
             <div class="new-product-specs__variant-col">
@@ -101,8 +112,8 @@
               </h4>
               <textarea 
                 class="new-product-specs__textarea" 
-                v-model="form.manualRu"
-                :disabled="form.selectedVariant !== 'manual'"
+                v-model="sharedProduct.specs.manualRu"
+                :disabled="sharedProduct.specs.selectedVariant !== 'manual' || !sharedProduct.title"
               ></textarea>
             </div>
           </div>
@@ -115,116 +126,42 @@
 </template>
 
 <script>
+import { generateProductSpecs } from '../utils/ai-generator';
+
 export default {
   name: 'NewProductSpecs',
+  inject: ['sharedProduct'],
   data() {
     return {
-      form: {
-        selectedVariant: 1,
-        manualUz: '',
-        manualRu: ''
-      },
-      variants: [
-        {
-          id: 1,
-          uz: {
-            groups: [
-              {
-                icon: '⚡',
-                title: 'Elektr Tizimi va Quvvat',
-                items: [
-                  "Motor quvvati: Odatda 1000W dan 1800W gacha...",
-                  "Akkumulyator: 5 yoki 6 ta akkumulyatordan iborat...",
-                  "Yurish masofasi (bir quvvatda): To'liq quvvat bilan 50 km...",
-                  "Quvvatlanish vaqti: Taxminan 6-8 soat."
-                ]
-              },
-              {
-                icon: '📦',
-                title: 'Yuk Tashish Imkoniyatlari',
-                items: [
-                  "Yuk ko'tarish quvvati: Modeliga qarab 500 kg dan...",
-                  "Bort o'lchami: O'rtacha 1.5m dan 1.8m gacha...",
-                  "Tezlik: Maksimal tezligi soatiga 30-50 km oralig'ida."
-                ]
-              },
-              {
-                icon: '🛠',
-                title: 'Konstruksiya va Qulayliklar',
-                items: [
-                  "Tormoz tizimi: Old va orqa barabanli yoki gidravlik tormozlar.",
-                  "Transmissiya: Past va baland uzatmalar tizimi...",
-                  "Qo'shimchalar: LED faralar, signalizatsiya tizimi..."
-                ]
-              }
-            ]
-          },
-          ru: {
-            groups: [
-              {
-                icon: '⚡',
-                title: 'Электрическая система и мощность',
-                items: [
-                  "Мощность мотора: Обычно бесщеточный мотор...",
-                  "Аккумулятор: Состоит из 5 или 6 аккумуляторов...",
-                  "Дальность хода: Может проехать от 50 до 100 км...",
-                  "Время зарядки: Примерно 6-8 часов."
-                ]
-              },
-              {
-                icon: '📦',
-                title: 'Возможности грузоперевозки',
-                items: [
-                  "Грузоподъемность: В зависимости от модели от 500...",
-                  "Размер платформы: Обычно платформа длиной от 1.5 м...",
-                  "Скорость: Максимальная скорость составляет от 30..."
-                ]
-              },
-              {
-                icon: '🛠',
-                title: 'Конструкция и удобства',
-                items: [
-                  "Тормозная система: Передние и задние барабанные...",
-                  "Трансмиссия: Система с низкими и высокими передачами...",
-                  "Дополнения: LED фары, сигнализация и в некоторых..."
-                ]
-              }
-            ]
-          }
-        },
-        {
-          id: 2,
-          uz: {
-            groups: [
-              {
-                icon: '⚡',
-                title: 'Elektr Tizimi va Quvvat',
-                items: [
-                  "Motor quvvati: Odatda 1200W dan 2000W gacha...",
-                  "Akkumulyator: 6 ta akkumulyatordan iborat...",
-                  "Yurish masofasi: 70 km dan 120 km gacha...",
-                  "Quvvatlanish vaqti: Taxminan 8 soat."
-                ]
-              }
-            ]
-          },
-          ru: {
-            groups: [
-              {
-                icon: '⚡',
-                title: 'Электрическая система и мощность',
-                items: [
-                  "Мощность мотора: от 1200W до 2000W...",
-                  "Аккумулятор: 6 аккумуляторов...",
-                  "Дальность хода: от 70 до 120 км...",
-                  "Время зарядки: Примерно 8 часов."
-                ]
-              }
-            ]
-          }
-        }
-      ]
+      // Local variants removed, using sharedProduct.specs.variants
     };
+  },
+  methods: {
+    async generateSpecsWithAI() {
+      if (this.sharedProduct.specs.isGeneratingAI) return;
+      
+      this.sharedProduct.specs.isGeneratingAI = true;
+      this.sharedProduct.specs.aiError = '';
+      
+      try {
+        const result = await generateProductSpecs(
+          this.sharedProduct.title, 
+          this.sharedProduct.title_ru,
+          false // Live mode
+        );
+        
+        // Update the global variants with AI suggestions
+        if (Array.isArray(result) && result.length >= 2) {
+          this.sharedProduct.specs.variants = result;
+          this.sharedProduct.specs.selectedVariant = 1; // Default to first AI variant
+        }
+        
+      } catch (error) {
+        this.sharedProduct.specs.aiError = error.message;
+      } finally {
+        this.sharedProduct.specs.isGeneratingAI = false;
+      }
+    }
   }
 };
 </script>
@@ -234,7 +171,6 @@ export default {
 
 .new-product-specs {
   font-family: 'Inter', sans-serif;
-  width: 100%;
   width: 100%;
   margin: 0 auto;
   padding: 0 0 2rem 0;
@@ -258,15 +194,9 @@ export default {
 .new-product-specs__alert {
   display: flex;
   align-items: center;
-  background: linear-gradient(
-    90deg,
-    rgba(24, 28, 255, 0.15) 0%,
-    rgba(231, 4, 216, 0.15) 100%
-  );
   border-radius: 12px;
   padding: 16px;
   border: 1px solid #DFE2E9;
-
   margin-bottom: 20px;
   background: linear-gradient(
   90deg,
@@ -291,14 +221,66 @@ export default {
 .new-product-specs__alert-icon {
   width: 16px;
   height: 16px;
-  color: #A855F7; /* Purple */
+  color: #A855F7;
 }
 
 .new-product-specs__alert-text {
   font-size: 13px;
   color: #111827;
   line-height: 1.5;
-  margin: 0;
+  margin: 0 0 12px 0;
+}
+
+.new-product-specs__alert-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.new-product-specs__ai-btn {
+  background: linear-gradient(90deg, #A855F7 0%, #7C3AED 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(168, 85, 247, 0.2);
+}
+
+.new-product-specs__ai-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(168, 85, 247, 0.3);
+}
+
+.new-product-specs__ai-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #9ca3af;
+}
+
+.new-product-specs__ai-error {
+  font-size: 12px;
+  color: #ef4444;
+  margin: 8px 0 0 0;
+}
+
+.new-product-specs__loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #A855F7;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .new-product-specs__link {

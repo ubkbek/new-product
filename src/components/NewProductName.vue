@@ -31,11 +31,12 @@
             <input 
               type="text" 
               class="new-product-name__input" 
-              placeholder="Mahsulotning aniq nomi" 
-              v-model="form.name_uz"
+              :placeholder="sharedProduct.category_id ? 'Mahsulotning aniq nomi' : 'Kategoriyani tanlang...'" 
+              v-model="sharedProduct.title"
               maxlength="100"
+              :disabled="!sharedProduct.category_id"
             />
-            <span class="new-product-name__counter">{{ form.name_uz.length }} / 100</span>
+            <span class="new-product-name__counter">{{ (sharedProduct.title || '').length }} / 100</span>
           </div>
         </div>
         
@@ -47,11 +48,12 @@
             <input 
               type="text" 
               class="new-product-name__input" 
-              placeholder="Mahsulotning aniq nomi" 
-              v-model="form.name_ru"
+              :placeholder="sharedProduct.category_id ? 'Mahsulotning aniq nomi' : 'Kategoriyani tanlang...'" 
+              v-model="sharedProduct.title_ru"
               maxlength="100"
+              :disabled="!sharedProduct.category_id"
             />
-            <span class="new-product-name__counter">{{ form.name_ru.length }} / 100</span>
+            <span class="new-product-name__counter">{{ (sharedProduct.title_ru || '').length }} / 100</span>
           </div>
         </div>
       </div>
@@ -63,14 +65,7 @@
 <script>
 export default {
   name: 'NewProductName',
-  data() {
-    return {
-      form: {
-        name_uz: '',
-        name_ru: ''
-      }
-    };
-  }
+  inject: ['sharedProduct']
 };
 </script>
 
@@ -79,7 +74,6 @@ export default {
 
 .new-product-name {
   font-family: 'Inter', sans-serif;
-  width: 100%;
   width: 100%;
   margin: 0 auto;
   padding: 0 0 2rem 0;

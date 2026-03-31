@@ -22,12 +22,13 @@
           </label>
           <div class="new-product-category__select-wrapper">
             <BaseDropdown
-              v-model="form[config.model]"
+              v-model="sharedProduct[config.model]"
               :options="config.options"
               :placeholder="config.placeholder"
               label-key="name"
               value-key="id"
               :searchable="config.searchable"
+              :disabled="config.disabled"
             />
           </div>
         </div>
@@ -44,13 +45,9 @@ export default {
   components: {
     BaseDropdown
   },
+  inject: ['sharedProduct'],
   data() {
     return {
-      form: {
-        category_id: '',
-        inner_category_id: '',
-        child_category_id: ''
-      },
       categories: [
         { id: 1, name: 'Elektronika' },
         { id: 2, name: 'Kiyim-kechak' },
@@ -78,21 +75,24 @@ export default {
           model: 'category_id', 
           options: this.categories, 
           placeholder: 'Kategoriyani tanlang', 
-          searchable: false 
+          searchable: true,
+          disabled: false
         },
         { 
           label: 'Ichki kategoriyani belgilang', 
           model: 'inner_category_id', 
           options: this.innerCategories, 
           placeholder: 'Kategoriyani tanlang', 
-          searchable: true 
+          searchable: false,
+          disabled: !this.sharedProduct.category_id
         },
         { 
           label: 'Kichik kategoriyani belgilang', 
           model: 'child_category_id', 
           options: this.childCategories, 
           placeholder: 'Kategoriyani tanlang', 
-          searchable: true 
+          searchable: false,
+          disabled: !this.sharedProduct.inner_category_id
         }
       ];
     }

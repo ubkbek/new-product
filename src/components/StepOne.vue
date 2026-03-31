@@ -6,6 +6,7 @@
     <NewProductImages />
     <NewProductVideo />
     <NewProductFeatures />
+    <NewProductColorMedia />
     <NewProductDelivery />
   </div>
 </template>
@@ -17,6 +18,7 @@ import NewProductSpecs from './NewProductSpecs.vue'
 import NewProductImages from './NewProductImages.vue'
 import NewProductVideo from './NewProductVideo.vue'
 import NewProductFeatures from './NewProductFeatures.vue'
+import NewProductColorMedia from './NewProductColorMedia.vue'
 import NewProductDelivery from './NewProductDelivery.vue'
 
 export default {
@@ -28,6 +30,7 @@ export default {
     NewProductImages,
     NewProductVideo,
     NewProductFeatures,
+    NewProductColorMedia,
     NewProductDelivery
   }
 }
@@ -37,6 +40,6 @@ export default {
 .step-one {
   display: flex;
   flex-direction: column;
-  gap: 0; /* Components have their own spacing/padding */
+  gap: 0;
 }
 </style>

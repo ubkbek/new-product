@@ -30,8 +30,12 @@
             <!-- Step Item -->
             <div 
               class="new-product__steps__step"
-              :class="{ 'new-product__steps__step--active': currentStep === step.id }"
+              :class="{ 
+                'new-product__steps__step--active': currentStep === step.id,
+                'new-product__steps__step--disabled': currentStep === 1 && step.id > 1 && !canProceed
+              }"
               @click="goToStep(step.id)"
+              :data-tooltip="currentStep === 1 && step.id > 1 && !canProceed ? 'Davom etishdan oldin majburiy maydonlarni to\'ldiring' : null"
             >
               <div class="new-product__steps__step-circle">
                 {{ step.id }}
@@ -56,7 +60,12 @@
         </div>
 
         <!-- Next Button -->
-        <button class="new-product__steps__btn" @click="handleNext">
+        <button
+          class="new-product__steps__btn"
+          :class="{ 'new-product__steps__btn--disabled': !canProceed && currentStep === 1 }"
+          @click="handleNext"
+          :data-tooltip="currentStep === 1 && !canProceed ? 'Davom etishdan oldin majburiy maydonlarni to\'ldiring' : null"
+        >
           Davom etish
           <svg class="new-product__steps__btn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -75,6 +84,14 @@ export default {
     currentStep: {
       type: Number,
       default: 1
+    },
+    canProceed: {
+      type: Boolean,
+      default: true
+    },
+    validationMessage: {
+      type: String,
+      default: 'Iltimos, barcha majburiy maydonlarni to\'ldiring.'
     }
   },
   data() {
@@ -88,9 +105,18 @@ export default {
   },
   methods: {
     goToStep(id) {
+      // Block forward navigation from step 1 if validation fails
+      if (this.currentStep === 1 && id > 1 && !this.canProceed) {
+        this.$emit('validation-fail', this.validationMessage);
+        return;
+      }
       this.$emit('change-step', id);
     },
     handleNext() {
+      if (this.currentStep === 1 && !this.canProceed) {
+        this.$emit('validation-fail', this.validationMessage);
+        return;
+      }
       if (this.currentStep < this.steps.length) {
         this.$emit('change-step', this.currentStep + 1);
       }
@@ -178,6 +204,73 @@ export default {
   user-select: none;
 }
 
+/* Step Modifier: Disabled/Blocked */
+.new-product__steps__step--disabled {
+  cursor: not-allowed;
+  position: relative;
+}
+
+.new-product__steps__step--disabled .new-product__steps__step-circle {
+  background-color: #e5e7eb;
+  color: #94a3b8;
+}
+
+.new-product__steps__step--disabled .new-product__steps__step-label {
+  color: #94a3b8;
+}
+
+/* Custom Tooltip using data-tooltip */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%) translateY(5px) scale(0.95);
+  background-color: #FEF3C7;
+  color: #92400E;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Inter', sans-serif;
+  border: 1px solid #FDE68A;
+}
+
+/* Small arrow for tooltip */
+[data-tooltip]::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  border-width: 6px;
+  border-style: solid;
+  border-color: #FDE68A transparent transparent transparent;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
 /* Step Label Transition */
 .step-fade-enter-active,
 .step-fade-leave-active {
@@ -235,6 +328,7 @@ export default {
 .new-product__steps__btn {
   display: flex;
   align-items: center;
+  position: relative;
   background-color: #22c55e;
   color: #ffffff;
   border: none;
@@ -248,6 +342,15 @@ export default {
 
 .new-product__steps__btn:hover {
   background-color: #16a34a;
+}
+
+.new-product__steps__btn--disabled {
+  background-color: #86efac;
+  cursor: not-allowed;
+}
+
+.new-product__steps__btn--disabled:hover {
+  background-color: #86efac;
 }
 
 /* Button Icon Element */

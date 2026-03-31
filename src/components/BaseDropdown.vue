@@ -3,7 +3,7 @@
     <!-- Dropdown Header/Trigger -->
     <div 
       class="base-dropdown__header" 
-      :class="{ 'base-dropdown__header--active': isOpen }"
+      :class="{ 'base-dropdown__header--active': isOpen, 'base-dropdown__header--disabled': disabled }"
       @click="toggleDropdown"
     >
       <div v-if="selectedOption" class="base-dropdown__selected">
@@ -107,6 +107,10 @@ export default {
     searchable: {
       type: Boolean,
       default: false
+    },
+    disabled: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -130,6 +134,7 @@ export default {
   },
   methods: {
     toggleDropdown() {
+      if (this.disabled) return;
       this.isOpen = !this.isOpen;
       if (this.isOpen) {
         this.searchQuery = '';
@@ -190,6 +195,17 @@ export default {
 .base-dropdown__header--active {
   border-color: #22c55e;
   box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+}
+
+.base-dropdown__header--disabled {
+  background-color: #F8FAFC;
+  border-color: #E2E8F0;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.base-dropdown__header--disabled:hover {
+  border-color: #E2E8F0;
 }
 
 .base-dropdown__selected {
