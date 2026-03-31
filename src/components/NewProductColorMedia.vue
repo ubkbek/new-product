@@ -77,20 +77,32 @@
               class="new-product-color-media__slot"
               :class="{ 
                 'new-product-color-media__slot--filled': getMediaByIndex(colorName, index),
-                'new-product-color-media__slot--loading': isLoading(colorName, index)
+                'new-product-color-media__slot--loading': isLoading(colorName, index),
+                'new-product-color-media__slot--ai-processing': isAIProcessing(colorName, index)
               }"
             >
-              <!-- Slot Loading State -->
+              <!-- Slot Loading State (Upload) -->
               <div v-if="isLoading(colorName, index)" class="new-product-color-media__spinner"></div>
+
+              <!-- AI Processing Overlay -->
+              <div v-if="isAIProcessing(colorName, index)" class="new-product-color-media__ai-overlay">
+                <div class="new-product-color-media__ai-spinner"></div>
+                <span class="new-product-color-media__ai-text">AI...</span>
+              </div>
 
               <!-- Slot Filled State (Preview) -->
               <template v-else-if="getMediaByIndex(colorName, index)">
-                <img :src="getMediaUrl(colorName, index)" class="new-product-color-media__preview-img">
-                <button class="new-product-color-media__delete-btn" @click="removeMedia(colorName, index)" title="O'chirish">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="new-product-color-media__remove-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                <img :src="getMediaUrl(colorName, index)" class="new-product-color-media__preview-img" @click="openViewer(colorName, index)">
+                <div class="new-product-color-media__actions">
+                  <button class="new-product-color-media__ai-btn" @click="processWithAI(colorName, index)" title="Fonni o'chirish (AI)">
+                    ✨
+                  </button>
+                  <button class="new-product-color-media__delete-btn" @click="removeMedia(colorName, index)" title="O'chirish">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="new-product-color-media__remove-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </template>
 
               <!-- Slot Empty State (Actions) -->
@@ -136,18 +148,36 @@
       </div>
 
     </div>
+
+    <!-- Image Viewer -->
+    <BaseImageViewer 
+      :show="viewerShow" 
+      :images="activeViewerImages" 
+      :initial-index="viewerIndex" 
+      @close="viewerShow = false" 
+    />
   </div>
 </template>
 
 <script>
+import BaseImageViewer from './BaseImageViewer.vue';
+import { removeBackground } from '../utils/ai-bg-remover';
+
 export default {
   name: 'NewProductColorMedia',
+  components: {
+    BaseImageViewer
+  },
   inject: ['sharedProduct', 'uploadFile', 'showToast'],
   data() {
     return {
       activeMediaTab: 'upload', // 'upload' | 'link'
       mediaByColor: {},
       loadingSlots: {}, // { "Oq": { 0: true, 1: true } }
+      aiProcessingSlots: {}, // { "Oq": { 0: true } }
+      viewerShow: false,
+      viewerIndex: 0,
+      activeViewerColor: null,
       predefinedColors: [
         { name: "Oq", hex: "#FFFFFF", border: "1px solid #E2E8F0" },
         { name: "Qora", hex: "#000000" },
@@ -168,6 +198,15 @@ export default {
     selectedColors() {
       const colorFeature = this.sharedProduct.features.find(f => f.title === "Rang / Цвет");
       return (colorFeature && colorFeature.items) || [];
+    },
+    activeViewerImages() {
+      if (!this.activeViewerColor || !this.sharedProduct.colorMedia[this.activeViewerColor]) return [];
+      return this.sharedProduct.colorMedia[this.activeViewerColor]
+        .filter(img => img)
+        .map(img => {
+          if (typeof img === 'string' && (img.startsWith('http') || img.startsWith('data:image'))) return img;
+          return `https://api.cabinet.smart-market.uz/uploads/images/${img}`;
+        });
     }
   },
   watch: {
@@ -218,6 +257,9 @@ export default {
     },
     isLoading(colorName, index) {
       return this.loadingSlots[colorName] && this.loadingSlots[colorName][index];
+    },
+    isAIProcessing(colorName, index) {
+      return this.aiProcessingSlots[colorName] && this.aiProcessingSlots[colorName][index];
     },
     isFirstEmptySlot(colorName, index) {
       const list = this.sharedProduct.colorMedia[colorName];
@@ -339,6 +381,44 @@ export default {
         this.$set(this.sharedProduct.colorMedia, colorName, newList);
         this.showToast('Rasm linki saqlandi.', 'success');
       }
+    },
+    async processWithAI(colorName, index) {
+      if (this.isAIProcessing(colorName, index)) return;
+      
+      const imageSource = this.sharedProduct.colorMedia[colorName][index];
+      if (!imageSource) return;
+
+      if (!this.aiProcessingSlots[colorName]) {
+        this.$set(this.aiProcessingSlots, colorName, {});
+      }
+      this.$set(this.aiProcessingSlots[colorName], index, true);
+
+      try {
+        const fullUrl = this.getMediaUrl(imageSource);
+        const result = await removeBackground(fullUrl);
+        if (result.success) {
+          const newList = [...this.sharedProduct.colorMedia[colorName]];
+          newList[index] = result.url;
+          this.$set(this.sharedProduct.colorMedia, colorName, newList);
+          this.showToast(`${colorName} uchun fon muvaffaqiyatli o'chirildi!`, 'success');
+        }
+      } catch (e) {
+        this.showToast('AI jarayonida xatolik yuz berdi.', 'error');
+      } finally {
+        this.$set(this.aiProcessingSlots[colorName], index, false);
+      }
+    },
+    openViewer(colorName, index) {
+      if (this.isAIProcessing(colorName, index)) return;
+      
+      this.activeViewerColor = colorName;
+      // Calculate index relative to non-null images
+      const colorMedia = this.sharedProduct.colorMedia[colorName] || [];
+      const currentImage = colorMedia[index];
+      const activeImages = colorMedia.filter(img => img);
+      
+      this.viewerIndex = activeImages.indexOf(currentImage);
+      this.viewerShow = true;
     }
   }
 };
@@ -382,13 +462,15 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 .new-product-color-media__tab--active {
   background-color: #ffffff;
   color: #22c55e;
   border-bottom-color: #ffffff;
-  z-index: 10;
+  z-index: 50;
 }
 
 /* Main Wrapper */
@@ -499,12 +581,26 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  cursor: zoom-in;
 }
 
-.new-product-color-media__delete-btn {
+.new-product-color-media__actions {
   position: absolute;
   top: 6px;
   right: 6px;
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.new-product-color-media__slot:hover .new-product-color-media__actions {
+  opacity: 1;
+}
+
+.new-product-color-media__delete-btn,
+.new-product-color-media__ai-btn {
   width: 24px;
   height: 24px;
   background-color: rgba(0, 0, 0, 0.5);
@@ -515,19 +611,22 @@ export default {
   justify-content: center;
   cursor: pointer;
   color: #ffffff;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
   padding: 0;
-  z-index: 10;
-  opacity: 0;
+}
+
+.new-product-color-media__ai-btn {
+  font-size: 11px;
+}
+
+.new-product-color-media__ai-btn:hover {
+  background-color: #a855f7;
+  transform: scale(1.15);
 }
 
 .new-product-color-media__remove-icon {
   width: 14px;
   height: 14px;
-}
-
-.new-product-color-media__slot:hover .new-product-color-media__delete-btn {
-  opacity: 1;
 }
 
 .new-product-color-media__delete-btn:hover {
@@ -581,6 +680,37 @@ export default {
 
 .new-product-color-media__file-input {
   display: none;
+}
+
+.new-product-color-media__ai-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.new-product-color-media__ai-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid #f3f3f3;
+  border-top: 2.5px solid #a855f7;
+  border-radius: 50%;
+  animation: rotation 1s linear infinite;
+}
+
+.new-product-color-media__ai-text {
+  font-size: 9px;
+  font-weight: 700;
+  color: #a855f7;
+  margin-top: 4px;
+}
+
+.new-product-color-media__slot--ai-processing {
+  border-color: #a855f7 !important;
 }
 
 .new-product-color-media__link-box {

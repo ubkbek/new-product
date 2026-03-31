@@ -54,13 +54,29 @@
         <!-- Upload Grid -->
         <div class="new-product-images__upload-grid">
           <!-- Added Images -->
-          <div v-for="(img, index) in sharedProduct.images" :key="'img-' + index" class="new-product-images__upload-box new-product-images__upload-box--image">
-            <img :src="getImageUrl(img)" alt="Product image" class="new-product-images__preview-img">
-            <button class="new-product-images__remove-btn" @click="removeImage(index)">
-              <svg xmlns="http://www.w3.org/2000/svg" class="new-product-images__remove-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+          <div v-for="(img, index) in sharedProduct.images" :key="'img-' + index" 
+            class="new-product-images__upload-box new-product-images__upload-box--image"
+            :class="{ 'new-product-images__upload-box--processing': processingIndices.includes(index) }"
+          >
+            <img :src="getImageUrl(img)" alt="Product image" class="new-product-images__preview-img" @click="openViewer(index)">
+            
+            <!-- AI Processing Overlay -->
+            <div v-if="processingIndices.includes(index)" class="new-product-images__ai-overlay">
+              <div class="new-product-images__spinner"></div>
+              <span class="new-product-images__ai-status">AI ishlov berilmoqda...</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div v-else class="new-product-images__actions">
+              <button class="new-product-images__ai-btn-small" @click="processWithAI(index)" title="Fonni o'chirish (AI)">
+                ✨
+              </button>
+              <button class="new-product-images__remove-btn" @click="removeImage(index)" title="O'chirish">
+                <svg xmlns="http://www.w3.org/2000/svg" class="new-product-images__remove-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <!-- Active Upload Action -->
@@ -84,9 +100,9 @@
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Link Section -->
+        <!-- Image Viewer -->
+      </div>
       <div v-show="activeTab === 'link'" class="new-product-images__link-section">
         <!-- Requirements Cards -->
         <div class="new-product-images__info-grid">
@@ -121,13 +137,29 @@
         <div v-if="sharedProduct.images.length > 0" class="new-product-images__link-preview">
           <h4 class="new-product-images__preview-title">Yuklangan rasmlar ({{ sharedProduct.images.length }}/6)</h4>
           <div class="new-product-images__upload-grid">
-            <div v-for="(img, index) in sharedProduct.images" :key="'link-img-' + index" class="new-product-images__upload-box new-product-images__upload-box--image">
-              <img :src="getImageUrl(img)" alt="Preview" class="new-product-images__preview-img">
-              <button class="new-product-images__remove-btn" @click="removeImage(index)">
-                <svg xmlns="http://www.w3.org/2000/svg" class="new-product-images__remove-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            <div v-for="(img, index) in sharedProduct.images" :key="'link-img-' + index" 
+              class="new-product-images__upload-box new-product-images__upload-box--image"
+              :class="{ 'new-product-images__upload-box--processing': processingIndices.includes(index) }"
+            >
+              <img :src="getImageUrl(img)" alt="Preview" class="new-product-images__preview-img" @click="openViewer(index)">
+              
+              <!-- AI Processing Overlay -->
+              <div v-if="processingIndices.includes(index)" class="new-product-images__ai-overlay">
+                <div class="new-product-images__spinner"></div>
+                <span class="new-product-images__ai-status">AI ishlov...</span>
+              </div>
+
+              <!-- Action Buttons -->
+              <div v-else class="new-product-images__actions">
+                <button class="new-product-images__ai-btn-small" @click="processWithAI(index)" title="Fonni o'chirish (AI)">
+                  ✨
+                </button>
+                <button class="new-product-images__remove-btn" @click="removeImage(index)" title="O'chirish">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="new-product-images__remove-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -149,16 +181,27 @@
       </div>
 
     </div>
+
+    <!-- Image Viewer (Moved to root level) -->
+    <BaseImageViewer 
+      :show="viewerShow" 
+      :images="viewerImages" 
+      :initial-index="viewerIndex" 
+      @close="viewerShow = false" 
+    />
   </div>
 </template>
 
 <script>
 import NewProductImageInfoCard from './NewProductImageInfoCard.vue';
+import BaseImageViewer from './BaseImageViewer.vue';
+import { removeBackground } from '../utils/ai-bg-remover';
 
 export default {
   name: 'NewProductImages',
   components: {
-    NewProductImageInfoCard
+    NewProductImageInfoCard,
+    BaseImageViewer
   },
   inject: ['sharedProduct', 'showAlert', 'showToast', 'uploadFile'],
   data() {
@@ -170,11 +213,11 @@ export default {
           text: 'JPG, JPEG, PNG yoki WebP format<br>Eng kamida 1080x1440 o\'lcham<br>5 MB dan katta bo\'lmasin<br>Mahsulotni turli burchaklardan tushiring' 
         },
         { 
-          title: 'Ranglari bo\'lsa', 
-          text: 'Agar mahsulot bir nechta rangda bo\'lsa, har bir rang uchun alohida rasm yuklang.' 
+          title: 'AI Magic ✨', 
+          text: 'Rasmni yuklang va ✨ tugmasini bosing — AI avtomatik tarzda fonni tozalab beradi.' 
         },
         { 
-          title: 'Rasm sotuvni oshiradi', 
+          title: 'Sifatli rasmlar', 
           text: 'Sifatli va yaqin olingan rasmlar mahsulotni aniq ko\'rsatadi va xaridor ishonchini oshiradi.' 
         },
         { 
@@ -182,7 +225,10 @@ export default {
           text: 'Rasmlar aniq, sifatli va boshqa brendlarga tegishli bo\'lmagan bo\'lishi kerak.<br>Talablarga mos kelmagan rasmlar tasdiqlanmaydi.' 
         }
       ],
-      isLinking: false
+      isLinking: false,
+      processingIndices: [],
+      viewerShow: false,
+      viewerIndex: 0
     };
   },
   created() {
@@ -203,6 +249,9 @@ export default {
         return !s.manualUz || !s.manualRu;
       }
       return s.variants.length === 0;
+    },
+    viewerImages() {
+      return this.sharedProduct.images.map(img => this.getImageUrl(img));
     }
   },
   methods: {
@@ -331,6 +380,30 @@ export default {
       if (this.sharedProduct.imageHashes) {
         this.sharedProduct.imageHashes.splice(index, 1);
       }
+    },
+    async processWithAI(index) {
+      if (this.processingIndices.includes(index)) return;
+      
+      this.processingIndices.push(index);
+      
+      try {
+        const fullUrl = this.getImageUrl(this.sharedProduct.images[index]);
+        const result = await removeBackground(fullUrl);
+        if (result.success) {
+          // Update the image in the state
+          this.$set(this.sharedProduct.images, index, result.url);
+          this.showToast('Fon muvaffaqiyatli o\'chirildi!', 'success');
+        }
+      } catch (e) {
+        this.showToast('AI jarayonida xatolik yuz berdi.', 'error');
+      } finally {
+        this.processingIndices = this.processingIndices.filter(i => i !== index);
+      }
+    },
+    openViewer(index) {
+      if (this.processingIndices.includes(index)) return;
+      this.viewerIndex = index;
+      this.viewerShow = true;
     }
   }
 };
@@ -381,7 +454,7 @@ export default {
   background-color: #ffffff;
   color: #22c55e;
   border-bottom-color: #ffffff;
-  z-index: 3;
+  z-index: 50;
 }
 
 .new-product-images__content {
@@ -486,12 +559,26 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  cursor: zoom-in;
 }
 
-.new-product-images__remove-btn {
+.new-product-images__actions {
   position: absolute;
   top: 6px;
   right: 6px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.new-product-images__upload-box--image:hover .new-product-images__actions {
+  opacity: 1;
+}
+
+.new-product-images__remove-btn,
+.new-product-images__ai-btn-small {
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -502,9 +589,17 @@ export default {
   justify-content: center;
   cursor: pointer;
   color: #ffffff;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
   padding: 0;
-  z-index: 10;
+}
+
+.new-product-images__ai-btn-small {
+  font-size: 12px;
+}
+
+.new-product-images__ai-btn-small:hover {
+  background-color: #A855F7;
+  transform: scale(1.1);
 }
 
 .new-product-images__remove-btn:hover {
@@ -514,6 +609,38 @@ export default {
 .new-product-images__remove-icon {
   width: 14px;
   height: 14px;
+}
+
+.new-product-images__ai-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.new-product-images__ai-status {
+  font-size: 10px;
+  font-weight: 600;
+  color: #A855F7;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.new-product-images__spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid #f3f3f3;
+  border-top: 2.5px solid #A855F7;
+  border-radius: 50%;
+  animation: rotation 1s linear infinite;
+}
+
+.new-product-images__upload-box--processing {
+  border-color: #A855F7 !important;
 }
 
 .new-product-images__search-wrapper {
