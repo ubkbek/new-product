@@ -138,8 +138,8 @@ export default {
   width: 48px;
   height: 48px;
   border-radius: 14px;
-  background: #F3F4F6;
-  color: #111827;
+  background: #E0F2FE;
+  color: #0284C7;
   display: flex;
   align-items: center;
   justify-content: center;

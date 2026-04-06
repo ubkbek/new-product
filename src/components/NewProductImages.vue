@@ -47,7 +47,7 @@
         </div>
 
         <!-- Link -->
-        <a href="#" class="new-product-images__link">
+        <a href="#" class="new-product-images__link" @click.prevent="showGuidelineDrawer = true">
           Yo'riqnomada batafsil <span class="new-product-images__link-arrow">&rarr;</span>
         </a>
 
@@ -56,7 +56,18 @@
           <!-- Added Images -->
           <div v-for="(img, index) in sharedProduct.images" :key="'img-' + index" 
             class="new-product-images__upload-box new-product-images__upload-box--image"
-            :class="{ 'new-product-images__upload-box--processing': processingIndices.includes(index) }"
+            :class="{ 
+              'new-product-images__upload-box--processing': processingIndices.includes(index),
+              'is-dragging': draggedIndex === index,
+              'is-over': dragOverIndex === index
+            }"
+            draggable="true"
+            @dragstart="onDragStart(index, $event)"
+            @dragover.prevent="onDragOver(index, $event)"
+            @dragenter.prevent="onDragEnter(index)"
+            @dragleave="onDragLeave(index)"
+            @drop="onDrop(index)"
+            @dragend="onDragEnd"
           >
             <img :src="getImageUrl(img)" alt="Product image" class="new-product-images__preview-img" @click="openViewer(index)">
             
@@ -139,7 +150,18 @@
           <div class="new-product-images__upload-grid">
             <div v-for="(img, index) in sharedProduct.images" :key="'link-img-' + index" 
               class="new-product-images__upload-box new-product-images__upload-box--image"
-              :class="{ 'new-product-images__upload-box--processing': processingIndices.includes(index) }"
+              :class="{ 
+                'new-product-images__upload-box--processing': processingIndices.includes(index),
+                'is-dragging': draggedIndex === index,
+                'is-over': dragOverIndex === index
+              }"
+              draggable="true"
+              @dragstart="onDragStart(index, $event)"
+              @dragover.prevent="onDragOver(index, $event)"
+              @dragenter.prevent="onDragEnter(index)"
+              @dragleave="onDragLeave(index)"
+              @drop="onDrop(index)"
+              @dragend="onDragEnd"
             >
               <img :src="getImageUrl(img)" alt="Preview" class="new-product-images__preview-img" @click="openViewer(index)">
               
@@ -189,6 +211,125 @@
       :initial-index="viewerIndex" 
       @close="viewerShow = false" 
     />
+
+    <!-- GUIDELINE SIDE PANEL (DRAWER) - PORTAL STYLE -->
+    <transition name="drawer-slide">
+      <div v-if="showGuidelineDrawer" class="pn-guideline-overlay" @click.self="showGuidelineDrawer = false">
+        <div class="pn-guideline-drawer">
+          <!-- Header (Matching Cabinet Design) -->
+          <div class="pn-guideline-header">
+            <div class="pn-guideline-header-left">
+              <h3 class="pn-guideline-header-title">Rasm yuklash yordamchisi</h3>
+              <span class="pn-guideline-header-badge">TUTORIAL</span>
+            </div>
+            <button class="pn-guideline-close-btn" @click="showGuidelineDrawer = false">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Content -->
+          <div class="pn-guideline-content">
+            <section class="pn-guideline-intro">
+              <p class="pn-guideline-subtitle">Suratlar mahsulotingizning "yuzi" hisoblanadi. Sifatli rasm xaridor qarorini 80% holatlarda ijobiy hal qiladi.</p>
+            </section>
+
+            <!-- 3 Step Path -->
+            <div class="pn-guideline-path">
+              <h4 class="pn-guideline-section-title">Professional suratlar 3 qadamda</h4>
+              
+              <div class="pn-guideline-step">
+                <div class="pn-guideline-step-num">01</div>
+                <div class="pn-guideline-step-info">
+                  <h5>Tabiiy yorug‘likdan foydalaning</h5>
+                  <p>Mahsulotni kunduzi, darcha yonida tushiring. Bu ranglarning aniqligini va sifatini ta'minlaydi.</p>
+                </div>
+              </div>
+
+              <div class="pn-guideline-step">
+                <div class="pn-guideline-step-num">02</div>
+                <div class="pn-guideline-step-info">
+                  <h5>AI Magic ✨ (Fonni tozalash)</h5>
+                  <p>Agar orqa fon chalg‘ituvchi bo‘lsa, rasmdagi ✨ tugmasini bosing. AI avtomatik fonni tozalab beradi.</p>
+                </div>
+              </div>
+
+              <div class="pn-guideline-step">
+                <div class="pn-guideline-step-num">03</div>
+                <div class="pn-guideline-step-info">
+                  <h5>Barcha burchaklarni ko‘rsating</h5>
+                  <p>Mahsulotning oldi, yon, orqa va albatta "close-up" (yaqinlashtirilgan) suratlarini yuklang.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Formula Reference Card -->
+            <div class="pn-guideline-formula-card">
+              <span class="pn-guideline-formula-label">Ideal surat formulasi</span>
+              <div class="pn-guideline-formula-row">
+                <span class="pn-guideline-formula-item">Tiniq surat</span>
+                <span class="pn-guideline-plus">+</span>
+                <span class="pn-guideline-formula-item">Oq fon</span>
+                <span class="pn-guideline-plus">+</span>
+                <span class="pn-guideline-formula-item">Matnsiz</span>
+                <span class="pn-guideline-plus">=</span>
+                <span class="pn-guideline-formula-item">Sotuvlar</span>
+              </div>
+              <div class="pn-guideline-formula-example">
+                Studio-sifati: Eng kamida 1080x1440 o‘lcham
+              </div>
+            </div>
+
+            <!-- Comparisons -->
+            <div class="pn-comparison">
+              <h4 class="pn-guideline-section-title">Solishtirish</h4>
+              <div class="pn-comparison-grid">
+                <div class="pn-comp-box pn-comp-box--good">
+                  <div class="pn-comp-header">Professional ✅</div>
+                  <p>Neytral fonda, tiniq yoritilgan, faqat mahsulot o‘zi.</p>
+                  <ul>
+                    <li>Diqqat mahsulotda</li>
+                    <li>Ishonchni oshiradi</li>
+                  </ul>
+                </div>
+                <div class="pn-comp-box pn-comp-box--bad">
+                  <div class="pn-comp-header">Taqiqlangan ✕</div>
+                  <p>Uy sharoitida, yomon chiroq, suv belgilari (watermark) bor.</p>
+                  <ul>
+                    <li>Watermark taqiqlanadi</li>
+                    <li>Moderatsiyadan o‘tmaydi</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pro Tip -->
+            <div class="pn-pro-tip">
+              <span class="pn-pro-tip-icon">💡</span>
+              <div class="pn-pro-tip-body">
+                <strong>Pro Tip:</strong> Birinchi rasm (Main image) har doim oq fonda va eng jozibali bo‘lishi shart.
+              </div>
+            </div>
+
+            <!-- Warnings -->
+            <div class="pn-warnings">
+              <h4 class="pn-guideline-section-title">Taqiqlanadi</h4>
+              <ul class="pn-warning-list">
+                <li>Suv belgilari (Watermarks) qo‘yish</li>
+                <li>Rasm ustiga matnlar yozish</li>
+                <li>Xira yoki past sifatli (low-res) suratlar</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="pn-guideline-footer">
+            <button class="pn-guideline-close-footer" @click="showGuidelineDrawer = false">Tushundim</button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -228,7 +369,10 @@ export default {
       isLinking: false,
       processingIndices: [],
       viewerShow: false,
-      viewerIndex: 0
+      viewerIndex: 0,
+      showGuidelineDrawer: false,
+      draggedIndex: null,
+      dragOverIndex: null
     };
   },
   created() {
@@ -254,7 +398,23 @@ export default {
       return this.sharedProduct.images.map(img => this.getImageUrl(img));
     }
   },
+  watch: {
+    showGuidelineDrawer(val) {
+      if (val) {
+        document.body.style.overflow = 'hidden';
+        window.addEventListener('keydown', this.handleKeydown);
+      } else {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', this.handleKeydown);
+      }
+    }
+  },
   methods: {
+    handleKeydown(e) {
+      if (e.key === 'Escape') {
+        this.showGuidelineDrawer = false;
+      }
+    },
     async getFileHash(file) {
       try {
         const arrayBuffer = await file.arrayBuffer();
@@ -404,7 +564,57 @@ export default {
       if (this.processingIndices.includes(index)) return;
       this.viewerIndex = index;
       this.viewerShow = true;
+    },
+    // Drag & Drop Handlers
+    onDragStart(index, event) {
+      this.draggedIndex = index;
+      event.dataTransfer.effectAllowed = 'move';
+      // Optional: set a transparent ghost image if browser default isn't good enough
+    },
+    onDragOver(index, event) {
+      // Required for drop to work
+      event.dataTransfer.dropEffect = 'move';
+    },
+    onDragEnter(index) {
+      if (this.draggedIndex === index) return;
+      this.dragOverIndex = index;
+    },
+    onDragLeave(index) {
+      if (this.dragOverIndex === index) {
+        this.dragOverIndex = null;
+      }
+    },
+    onDrop(targetIndex) {
+      if (this.draggedIndex === null || this.draggedIndex === targetIndex) return;
+
+      const images = [...this.sharedProduct.images];
+      const hashes = [...(this.sharedProduct.imageHashes || [])];
+
+      // Move Image
+      const [draggedImage] = images.splice(this.draggedIndex, 1);
+      images.splice(targetIndex, 0, draggedImage);
+
+      // Move Hash (Stay in sync for duplicate detection)
+      if (hashes.length > 0) {
+        const [draggedHash] = hashes.splice(this.draggedIndex, 1);
+        hashes.splice(targetIndex, 0, draggedHash);
+      }
+
+      // Update Shared State
+      this.sharedProduct.images = images;
+      if (this.sharedProduct.imageHashes) {
+        this.sharedProduct.imageHashes = hashes;
+      }
+      
+      this.onDragEnd();
+    },
+    onDragEnd() {
+      this.draggedIndex = null;
+      this.dragOverIndex = null;
     }
+  },
+  beforeDestroy() {
+    window.removeEventListener('keydown', this.handleKeydown);
   }
 };
 </script>
@@ -643,6 +853,37 @@ export default {
   border-color: #A855F7 !important;
 }
 
+/* Drag & Drop Feedback Styles */
+.new-product-images__upload-box--image {
+  cursor: grab !important;
+}
+
+.new-product-images__upload-box--image:active {
+  cursor: grabbing !important;
+}
+
+.new-product-images__upload-box--image.is-dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+  border: 2px dashed #22c55e;
+  background-color: #f0fdf4;
+}
+
+.new-product-images__upload-box--image.is-over {
+  border: 2px solid #22c55e;
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px -5px rgba(34, 197, 94, 0.2);
+  z-index: 30;
+}
+
+.new-product-images__upload-box--image.is-over::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(34, 197, 94, 0.05);
+  pointer-events: none;
+}
+
 .new-product-images__search-wrapper {
   position: relative;
   width: 100%;
@@ -840,4 +1081,108 @@ export default {
   width: 14px;
   height: 14px;
 }
+/* GUIDELINE SIDE PANEL STYLES (PORTAL-STYLE) */
+.pn-guideline-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pn-guideline-drawer {
+  width: 70%;
+  height: 100%;
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -20px 0 50px rgba(0, 0, 0, 0.1);
+}
+
+.pn-guideline-header {
+  padding: 24px 40px;
+  border-bottom: 1px solid #DFE2E9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #FFFFFF;
+}
+
+.pn-guideline-header-left { display: flex; align-items: center; gap: 16px; }
+.pn-guideline-header-title { font-size: 18px; font-weight: 700; color: #111827; margin: 0; }
+.pn-guideline-header-badge { font-size: 10px; font-weight: 800; background: #EEF2FF; color: #3B82F6; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.05em; }
+
+.pn-guideline-close-btn {
+  background: none;
+  border: none;
+  color: #9CA3AF;
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.2s;
+}
+.pn-guideline-close-btn:hover { color: #111827; }
+.pn-guideline-close-btn svg { width: 24px; height: 24px; }
+
+.pn-guideline-content { flex: 1; overflow-y: auto; padding: 40px; }
+
+.pn-guideline-intro { margin-bottom: 40px; }
+.pn-guideline-subtitle { font-size: 16px; color: #64748B; line-height: 1.6; margin: 0; }
+
+.pn-guideline-section-title { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 24px; }
+
+/* 3 Step Path */
+.pn-guideline-path { margin-bottom: 56px; }
+.pn-guideline-step { display: flex; gap: 20px; margin-bottom: 24px; }
+.pn-guideline-step-num { width: 40px; height: 40px; border-radius: 10px; background: #F8FAFC; border: 1px solid #E2E8F0; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #3B82F6; flex-shrink: 0; }
+.pn-guideline-step-info h5 { font-size: 15px; font-weight: 700; color: #111827; margin: 0 0 4px 0; }
+.pn-guideline-step-info p { font-size: 14px; color: #64748B; margin: 0; line-height: 1.5; }
+
+/* Formula Card */
+.pn-guideline-formula-card { background: #F9FBFF; border: 1px solid #E0E7FF; border-radius: 16px; padding: 32px; margin-bottom: 56px; text-align: center; }
+.pn-guideline-formula-label { font-size: 12px; font-weight: 700; color: #6366F1; text-transform: uppercase; display: block; margin-bottom: 20px; }
+.pn-guideline-formula-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.pn-guideline-formula-item { background: white; border: 1px solid #DFE2E9; padding: 8px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; color: #111827; }
+.pn-guideline-plus { color: #94A3B8; font-weight: 300; }
+.pn-guideline-formula-example { font-size: 15px; color: #111827; font-weight: 700; }
+
+/* Comparison */
+.pn-comparison-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 56px; }
+.pn-comp-box { padding: 24px; border-radius: 16px; border: 1px solid #E2E8F0; }
+.pn-comp-box--good { background: #F0FDF4; border-color: #DCFCE7; }
+.pn-comp-box--bad { background: #FEF2F2; border-color: #FEE2E2; }
+.pn-comp-header { font-size: 13px; font-weight: 800; margin-bottom: 12px; }
+.pn-comp-box--good .pn-comp-header { color: #166534; }
+.pn-comp-box--bad .pn-comp-header { color: #991B1B; }
+.pn-comp-box p { font-size: 15px; font-weight: 700; color: #0F172A; margin-bottom: 12px; }
+.pn-comp-box ul { padding-left: 18px; margin: 0; }
+.pn-comp-box li { font-size: 13px; color: #475569; margin-bottom: 4px; }
+
+/* Pro Tip */
+.pn-pro-tip { background: #EFF6FF; border-radius: 16px; padding: 20px; display: flex; gap: 16px; margin-bottom: 56px; }
+.pn-pro-tip-icon { font-size: 20px; }
+.pn-pro-tip-body { font-size: 14px; color: #1E40AF; line-height: 1.5; }
+
+/* Warnings */
+.pn-warnings { background: #FDF2F2; border: 1px solid #FEE2E2; border-radius: 16px; padding: 24px; }
+.pn-warning-list { margin: 0; padding-left: 18px; }
+.pn-warning-list li { font-size: 14px; color: #991B1B; font-weight: 500; margin-bottom: 8px; }
+
+/* Footer */
+.pn-guideline-footer { padding: 24px 40px; border-top: 1px solid #DFE2E9; background: white; display: flex; justify-content: flex-end; }
+.pn-guideline-close-footer { display: inline-block; background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; padding: 12px 32px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.pn-guideline-close-footer:hover { background: #BBF7D0; transform: translateY(-1px); }
+
+/* ANIMATION */
+.drawer-slide-enter-active, .drawer-slide-leave-active { transition: opacity 0.6s ease; }
+.drawer-slide-enter-active .pn-guideline-drawer, .drawer-slide-leave-active .pn-guideline-drawer { transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
+.drawer-slide-enter, .drawer-slide-leave-to { opacity: 0; }
+.drawer-slide-enter .pn-guideline-drawer, .drawer-slide-leave-to .pn-guideline-drawer { transform: translateX(100%); }
+
+@media (max-width: 1100px) { .pn-guideline-drawer { width: 85%; } }
+@media (max-width: 768px) { .pn-guideline-drawer { width: 100%; } .pn-comparison-grid { grid-template-columns: 1fr; } }
 </style>

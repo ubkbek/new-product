@@ -139,6 +139,14 @@
               </template>
             </div>
           </div>
+          
+          <!-- Warning for 1 image rule -->
+          <div v-if="getColorImageCount(colorName) === 1" class="new-product-color-media__warning">
+            <svg class="new-product-color-media__warning-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            Har bir rang uchun kamida 2 ta rasm yuklash kerak.
+          </div>
         </div>
 
         <!-- No data state -->
@@ -419,6 +427,10 @@ export default {
       
       this.viewerIndex = activeImages.indexOf(currentImage);
       this.viewerShow = true;
+    },
+    getColorImageCount(colorName) {
+      const media = this.sharedProduct.colorMedia[colorName];
+      return media ? media.filter(img => img).length : 0;
     }
   }
 };
@@ -740,6 +752,31 @@ export default {
   border: 1.5px dashed #E2E8F0;
   border-radius: 16px;
   margin-top: 20px;
+}
+
+.new-product-color-media__warning {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background-color: #FFFBEB;
+  border-radius: 10px;
+  color: #D97706;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.new-product-color-media__warning-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsive Grid Adjustments */

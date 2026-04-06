@@ -4,16 +4,18 @@
     <!-- Section 1: Delivery Days -->
     <div class="new-product-delivery__section">
       <h2 class="new-product-delivery__title">Yetkazib berish kuni tanlang</h2>
-      <div class="new-product-delivery__grid new-product-delivery__grid--days">
-        <div 
-          v-for="day in deliveryOptions" 
-          :key="'day-' + day"
-          class="new-product-delivery__item new-product-delivery__item--day"
-          :class="{ 'new-product-delivery__item--active': sharedProduct.delivery.selectedDelivery === day, 'new-product-delivery__item--disabled': isImagesIncomplete }"
-          @click="isImagesIncomplete ? null : sharedProduct.delivery.selectedDelivery = day"
-        >
-          <div class="new-product-delivery__radio-circle"></div>
-          <span class="new-product-delivery__text">{{ day }} kun</span>
+      <div class="new-product-delivery__wrapper">
+        <div class="new-product-delivery__grid new-product-delivery__grid--days">
+          <div 
+            v-for="day in deliveryOptions" 
+            :key="'day-' + day"
+            class="new-product-delivery__item new-product-delivery__item--day"
+            :class="{ 'new-product-delivery__item--active': sharedProduct.delivery.selectedDelivery === day, 'new-product-delivery__item--disabled': isImagesIncomplete }"
+            @click="isImagesIncomplete ? null : sharedProduct.delivery.selectedDelivery = day"
+          >
+            <div class="new-product-delivery__radio-circle"></div>
+            <span class="new-product-delivery__text">{{ day }} kun</span>
+          </div>
         </div>
       </div>
     </div>
@@ -124,6 +126,13 @@ export default {
   font-weight: 700;
   color: #1f2937;
   margin: 0 0 16px 0;
+}
+
+.new-product-delivery__wrapper {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #DFE2E9;
 }
 
 .new-product-delivery__grid {

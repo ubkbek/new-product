@@ -207,6 +207,8 @@
                     :class="{ 'new-product-pricing__cell-input--error': getRowErrors(row).sku }"
                     v-model="row.sku"
                     @input="handleRowSkuInput(row)"
+                    :ref="'cell_' + index + '_0'"
+                    @keydown="handleTableKeydown(index, 0, $event)"
                   >
                 </div>
               </td>
@@ -216,6 +218,8 @@
                   class="new-product-pricing__cell-input"
                   v-model="row.barcode"
                   placeholder="-"
+                  :ref="'cell_' + index + '_1'"
+                  @keydown="handleTableKeydown(index, 1, $event)"
                 >
               </td>
               <td>
@@ -224,6 +228,8 @@
                   class="new-product-pricing__select" 
                   v-model="row.mxikCode" 
                   placeholder="Kod yoki nomi..."
+                  :ref="'cell_' + index + '_2'"
+                  @keydown="handleTableKeydown(index, 2, $event)"
                 >
               </td>
               <td>
@@ -238,6 +244,8 @@
                     class="new-product-pricing__cell-input" 
                     :value="formatPrice(row.totalQuantity)" 
                     @input="handleNumericInput(row, 'totalQuantity', $event)"
+                    :ref="'cell_' + index + '_3'"
+                    @keydown="handleTableKeydown(index, 3, $event)"
                   >
                   <span class="new-product-pricing__cell-unit">ta</span>
                 </div>
@@ -249,6 +257,8 @@
                     class="new-product-pricing__cell-input" 
                     :value="formatPrice(row.minSaleQuantity)" 
                     @input="handleNumericInput(row, 'minSaleQuantity', $event)"
+                    :ref="'cell_' + index + '_4'"
+                    @keydown="handleTableKeydown(index, 4, $event)"
                   >
                   <span class="new-product-pricing__cell-unit">ta</span>
                 </div>
@@ -261,6 +271,8 @@
                     :value="formatPrice(row.price)" 
                     @input="handleNumericInput(row, 'price', $event)"
                     placeholder="0"
+                    :ref="'cell_' + index + '_5'"
+                    @keydown="handleTableKeydown(index, 5, $event)"
                   >
                   <span class="new-product-pricing__cell-unit">so'm</span>
                 </div>
@@ -273,6 +285,8 @@
                     :value="formatPrice(row.discount)" 
                     @input="handleNumericInput(row, 'discount', $event)"
                     placeholder="0"
+                    :ref="'cell_' + index + '_6'"
+                    @keydown="handleTableKeydown(index, 6, $event)"
                   >
                   <span class="new-product-pricing__cell-unit">so'm</span>
                 </div>
@@ -312,6 +326,12 @@
             </div>
           </div>
           <div class="sab-right">
+            <button class="sab-btn sab-btn--secondary" @click="$emit('change-step', 1)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Ortga qaytish
+            </button>
             <button class="sab-btn sab-btn--primary" @click="handleNextStep">
               Keyingi qadam
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -370,13 +390,20 @@ export default {
         this.generateVariantRows();
       },
       deep: true
+    },
+    // Watch colors to regenerate rows if color variants change
+    'sharedProduct.colorMedia': {
+      handler() {
+        this.generateVariantRows();
+      },
+      deep: true
     }
   },
   mounted() {
-    // Generate initial rows if none exist
-    if (!this.sharedProduct.skuRows || this.sharedProduct.skuRows.length === 0) {
-      this.generateVariantRows();
-    }
+    // Tizim doimo mount bo'lganda qatorlarni hisoblashi kerak, 
+    // chunki user 1-chi qadamga qaytib, yangi xususiyat qo'shib yana 2-chi qadamga kelgan bo'lishi mumkin!
+    this.generateVariantRows();
+    
     // Global click listener to close bulk popovers
     window.addEventListener('click', this.handleGlobalClick);
     window.addEventListener('scroll', this.handleScroll);
@@ -453,9 +480,15 @@ export default {
 
     // 2. Generate Variant Combination Rows (Cartesian Product)
     generateVariantRows() {
-      const features = (this.sharedProduct.features || []).filter(f => f.items && f.items.length > 0);
+      const explicitFeatures = (this.sharedProduct.features || []).filter(f => f.items && f.items.length > 0);
       
-      if (features.length === 0) {
+      const featuresToCombine = [];
+      
+      explicitFeatures.forEach(f => {
+        featuresToCombine.push(f.items);
+      });
+      
+      if (featuresToCombine.length === 0) {
         // Handle single product with no variants
         const singleRow = this.createNewRow([], 'Asosiy');
         this.sharedProduct.skuRows = [singleRow];
@@ -463,7 +496,7 @@ export default {
       }
 
       // Generate Cartesian Product
-      const combinations = this.cartesianProduct(features.map(f => f.items));
+      const combinations = this.cartesianProduct(featuresToCombine);
       
       // Preserve existing data for matching combinations
       const existingRowsMap = new Map();
@@ -594,7 +627,51 @@ export default {
       (this.sharedProduct.skuRows || []).forEach(row => this.recalculateRow(row));
     },
 
-    // 5. Validation Logic
+    // 5. Excel-style Keyboard Navigation
+    handleTableKeydown(rowIndex, colIndex, event) {
+      const { key } = event;
+      let targetRow = rowIndex;
+      let targetCol = colIndex;
+
+      if (key === 'ArrowUp') {
+        targetRow--;
+      } else if (key === 'ArrowDown' || key === 'Enter') {
+        targetRow++;
+      } else if (key === 'ArrowLeft') {
+        targetCol--;
+      } else if (key === 'ArrowRight') {
+        targetCol++;
+      } else {
+        return; // Don't prevent default for other keys
+      }
+
+      const totalRows = (this.sharedProduct.skuRows || []).length;
+      const totalCols = 7; // SKU, Barcode, MXIK, Qty, MinQty, Price, Discount
+
+      // Bound checking
+      if (targetRow < 0 || targetRow >= totalRows || targetCol < 0 || targetCol >= totalCols) {
+        return;
+      }
+
+      event.preventDefault(); // Prevent scroll or default behavior
+
+      this.$nextTick(() => {
+        const refName = `cell_${targetRow}_${targetCol}`;
+        const targetEl = this.$refs[refName];
+        
+        if (targetEl && targetEl[0]) {
+          const input = targetEl[0];
+          input.focus();
+          
+          // Selection logic for faster editing
+          if (input.select) {
+            input.select();
+          }
+        }
+      });
+    },
+
+    // 6. Validation Logic
     validateRow(row) {
       const errors = {};
       
@@ -1002,6 +1079,12 @@ export default {
   box-sizing: border-box;
   text-align: center;
   text-align-last: center;
+  transition: all 0.2s ease;
+}
+
+.new-product-pricing__select:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .new-product-pricing__cell-input-wrap {
@@ -1013,6 +1096,12 @@ export default {
   padding: 0 8px;
   height: 36px;
   background-color: #fff;
+  transition: all 0.2s ease;
+}
+
+.new-product-pricing__cell-input-wrap:focus-within {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
 }
 
 .new-product-pricing__cell-input {
@@ -1031,7 +1120,12 @@ export default {
 }
 
 .new-product-pricing__cell-input:focus {
-  border-color: #22c55e;
+  border-color: #16a34a;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
+  outline: none;
+  z-index: 10;
+  position: relative;
 }
 
 .new-product-pricing__cell-input-wrap .new-product-pricing__cell-input {
@@ -1060,7 +1154,9 @@ export default {
 
 .new-product-pricing__cell-input--sku:focus {
   background-color: #ffffff;
-  border-color: #22c55e;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  outline: none;
 }
 
 .new-product-pricing__cell-input--error {
@@ -1187,8 +1283,8 @@ export default {
   width: 48px;
   height: 48px;
   border-radius: 14px;
-  background: #F3F4F6;
-  color: #111827;
+  background: #E0F2FE;
+  color: #0284C7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1250,6 +1346,27 @@ export default {
 
 .sab-btn--primary:active {
   transform: translateY(0);
+}
+
+.sab-btn--secondary {
+  background: #FFFFFF;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.sab-btn--secondary:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #1E293B;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.sab-btn--secondary:active {
+  transform: translateY(0);
+  background: #F1F5F9;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
 }
 
 @media (max-width: 768px) {

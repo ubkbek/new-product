@@ -7,7 +7,7 @@ console.log('--- AI Generator Utility Loaded: v7.0 (Flash-Latest-Stable) ---');
 
 // Placeholder for Gemini API Key
 // Users can get a free key at https://aistudio.google.com/
-const GEMINI_API_KEY = 'AIzaSyDbvpEb08aBFw4Se9S53lIssFq_xTsXouE'; 
+const GEMINI_API_KEY = 'AIzaSyCrri1LTFu4uMnZPku9lMW9YzCtJ0qUQBE'; 
 
 /**
  * Generates technical specifications based on product titles.
@@ -98,6 +98,69 @@ export async function generateProductSpecs(titleUz, titleRu, forceMock = false) 
     }
 
     throw new Error('AI orqali ma\'lumot olishda xatolik yuz berdi. API Key huquqlarini tekshiring.');
+  }
+}
+
+/**
+ * Translates HTML content between Uzbek and Russian while preserving tags.
+ * @param {string} html - The HTML content to translate
+ * @param {string} targetLang - The target language ('uz' or 'ru')
+ * @returns {Promise<string>}
+ */
+export async function translateProductContent(html, targetLang) {
+  if (!html || !html.trim()) return '';
+  if (!GEMINI_API_KEY) {
+    console.warn('AI Translation: No API Key provided, returning original');
+    return html;
+  }
+
+  const srcLang = targetLang === 'ru' ? 'Uzbek' : 'Russian';
+  const dstLang = targetLang === 'ru' ? 'Russian' : 'Uzbek';
+
+  const prompt = `
+    You are a professional technical translator for an e-commerce platform.
+    Your task is to translate the following HTML content from ${srcLang} to ${dstLang}.
+
+    CRITICAL RULES:
+    1. Keep ALL HTML tags, attributes (e.g. img src, style), and structure EXACTLY as they are.
+    2. ONLY translate the human-readable text content within the tags.
+    3. Do NOT add any preamble, markdown code blocks, or explanations. 
+    4. Return ONLY the resulting translated HTML string.
+    5. Maintain the technical tone suitable for product specifications.
+
+    Content to translate:
+    ${html}
+  `;
+
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      throw new Error('AI kutilgan formatda javob bermadi');
+    }
+
+    const text = data.candidates[0].content.parts[0].text;
+    
+    // Clean potential markdown wrap
+    return text.replace(/^```html\n?/, '').replace(/\n?```$/, '').trim();
+  } catch (error) {
+    console.error('AI Translation Error:', error);
+    throw new Error('Tarjima qilishda xatolik yuz berdi: ' + error.message);
   }
 }
 

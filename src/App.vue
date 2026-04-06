@@ -19,7 +19,7 @@
     </div>
 
     <div class="container-large" v-else-if="currentStep === 3">
-      <NewProductPreview />
+      <NewProductPreview @change-step="updateStep" />
     </div>
 
     <!-- Global Toasts Container -->
@@ -63,6 +63,28 @@
         </div>
       </div>
     </transition>
+
+    <!-- Global Live Preview Drawer -->
+    <LivePreviewDrawer 
+      :show="showLivePreview" 
+      @close="showLivePreview = false" 
+    />
+
+    <!-- Floating Toggle Button -->
+    <button 
+      v-if="currentStep < 3 && !showLivePreview"
+      class="live-preview-trigger" 
+      :class="{ 'live-preview-trigger--active': showLivePreview }"
+      @click="showLivePreview = !showLivePreview"
+    >
+      <div class="live-preview-trigger-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+          <line x1="12" y1="18" x2="12.01" y2="18"></line>
+        </svg>
+      </div>
+      <span class="live-preview-trigger-text">Xaridorda ko'rinishi</span>
+    </button>
   </div>
 </template>
 
@@ -71,6 +93,7 @@ import NewProductSteps from './components/NewProductSteps.vue'
 import StepOne from './components/StepOne.vue'
 import NewProductPricing from './components/NewProductPricing.vue'
 import NewProductPreview from './components/NewProductPreview.vue'
+import LivePreviewDrawer from './components/LivePreviewDrawer.vue'
 
 export default {
   name: 'App',
@@ -78,7 +101,8 @@ export default {
     NewProductSteps,
     StepOne,
     NewProductPricing,
-    NewProductPreview
+    NewProductPreview,
+    LivePreviewDrawer
   },
   data() {
     const savedStep = localStorage.getItem('currentStep');
@@ -127,8 +151,15 @@ export default {
           type: 'success'
         }
       },
+      showLivePreview: false,
       toasts: []
     };
+  },
+  created() {
+    window.addEventListener('keydown', this.handleGlobalKeydown);
+  },
+  beforeDestroy() {
+    window.removeEventListener('keydown', this.handleGlobalKeydown);
   },
   provide() {
     return {
@@ -141,14 +172,21 @@ export default {
   computed: {
     step1Valid() {
       const p = this.newProduct;
-      const hasCategory = !!p.category_id;
+      const hasCategory = !!p.category_id && !!p.inner_category_id && !!p.child_category_id;
       const hasTitle = !!(p.title && p.title.trim());
       const hasTitleRu = !!(p.title_ru && p.title_ru.trim());
       const hasImages = p.images && p.images.length > 0;
+      const isEmptyHtml = (html) => {
+        if (!html) return true;
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        let text = tmp.textContent || tmp.innerText || '';
+        return text.replace(/[\u200B-\u200D\uFEFF]/g, '').trim() === '';
+      };
       const hasSpecs = (() => {
         const s = p.specs;
         if (!s) return false;
-        if (s.selectedVariant === 'manual') return !!(s.manualUz && s.manualRu);
+        if (s.selectedVariant === 'manual') return !isEmptyHtml(s.manualUz) && !isEmptyHtml(s.manualRu);
         return s.variants && s.variants.length > 0 && !!s.selectedVariant;
       })();
       const hasColorMediaValid = Object.values(p.colorMedia || {}).every(mediaArray => {
@@ -160,13 +198,31 @@ export default {
     },
     step1ValidationMessage() {
       const p = this.newProduct;
-      if (!p.category_id) return 'Kategoriyani tanlang.';
+      if (!p.category_id) return 'Asosiy kategoriyani tanlang.';
+      if (!p.inner_category_id) return 'Ichki kategoriyani tanlang.';
+      if (!p.child_category_id) return 'Kichik kategoriyani tanlang.';
       if (!p.title || !p.title.trim()) return 'Mahsulot nomini (O\'zbek tilida) kiriting.';
       if (!p.title_ru || !p.title_ru.trim()) return 'Mahsulot nomini (Rus tilida) kiriting.';
-      if (!p.images || p.images.length === 0) return 'Kamida 1 ta rasm yuklang.';
+      // Specs validation (must match UI order: comes before Images)
+      const isEmptyHtml = (html) => {
+        if (!html) return true;
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        let text = tmp.textContent || tmp.innerText || '';
+        return text.replace(/[\u200B-\u200D\uFEFF]/g, '').trim() === '';
+      };
+      
       const s = p.specs;
-      if (s && s.selectedVariant === 'manual' && (!s.manualUz || !s.manualRu)) return 'Texnik parametrlarni to\'ldiring.';
-      if (s && s.selectedVariant !== 'manual' && (!s.variants || s.variants.length === 0)) return 'Texnik parametrlarni to\'ldiring.';
+      if (!s || (s.selectedVariant !== 'manual' && (!s.variants || s.variants.length === 0 || !s.selectedVariant))) {
+        return 'Texnik parametrlarni to\'ldiring.';
+      }
+      if (s.selectedVariant === 'manual') {
+        if (isEmptyHtml(s.manualUz)) return 'Texnik parametrni o\'zbek tilida kiritish majburiy.';
+        if (isEmptyHtml(s.manualRu)) return 'Texnik parametrni rus tilida kiritish majburiy.';
+      }
+
+      // Images validation
+      if (!p.images || p.images.length === 0) return 'Kamida 1 ta rasm yuklang.';
 
       // Check color media counts (min 2 or 0)
       for (const [colorName, mediaArray] of Object.entries(p.colorMedia || {})) {
@@ -227,24 +283,68 @@ export default {
   },
   methods: {
     updateStep(stepId) {
-      // If proceeding to a next step, check current step validity
       if (stepId > this.currentStep) {
-        if (this.currentStep === 1 && !this.step1Valid) {
-          this.handleValidationFail(this.step1ValidationMessage);
-          return;
-        }
-        if (this.currentStep === 2 && !this.step2Valid) {
-          this.handleValidationFail(this.step2ValidationMessage);
+        const error = (this.currentStep === 1) ? this.step1ValidationMessage : this.step2ValidationMessage;
+        if ((this.currentStep === 1 && !this.step1Valid) || (this.currentStep === 2 && !this.step2Valid)) {
+          this.handleValidationFail(error);
           return;
         }
       }
-      
       this.currentStep = stepId;
       localStorage.setItem('currentStep', stepId);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
+    handleGlobalKeydown(e) {
+      if (e.key === 'Escape' && this.showLivePreview) {
+        this.showLivePreview = false;
+      }
+    },
     handleValidationFail(message) {
       this.showToast(message, 'error');
+      
+      let selector = null;
+      if (message === 'Asosiy kategoriyani tanlang.') selector = '.new-product-category__group:nth-child(1) .base-dropdown__header';
+      else if (message === 'Ichki kategoriyani tanlang.') selector = '.new-product-category__group:nth-child(2) .base-dropdown__header';
+      else if (message === 'Kichik kategoriyani tanlang.') selector = '.new-product-category__group:nth-child(3) .base-dropdown__header';
+      else if (message.includes("O'zbek tilida) kiriting.")) selector = '.new-product-name__group:nth-child(1) .new-product-name__input';
+      else if (message.includes("Rus tilida) kiriting.")) selector = '.new-product-name__group:nth-child(2) .new-product-name__input';
+      else if (message.includes('rasm yuklang')) selector = '.new-product-images__card, .new-product-images';
+      else if (message === 'Texnik parametrni o\'zbek tilida kiritish majburiy.') selector = '.new-product-specs__option--manual .new-product-specs__variant-col:nth-child(1) .base-rich-editor';
+      else if (message === 'Texnik parametrni rus tilida kiritish majburiy.') selector = '.new-product-specs__option--manual .new-product-specs__variant-col:nth-child(2) .base-rich-editor';
+      else if (message.includes('parametr')) selector = '.new-product-specs__card, .new-product-specs';
+      else if (message.includes('rasm yuklash kerak')) selector = '.new-product-color-media__card, .new-product-color-media';
+      else if (message.includes('SKU') || message.includes('miqdor') || message.includes('Narx') || message.includes('Chegirma') || message.includes('to‘g‘ri to‘ldiring')) {
+        selector = '.new-product-pricing__table-wrapper, .new-product-pricing__card';
+      } else {
+        selector = '.step-one';
+      }
+
+      if (selector) {
+        this.$nextTick(() => {
+          const el = document.querySelector(selector);
+          if (el) {
+            const windowHeight = window.innerHeight;
+            const elementHeight = el.getBoundingClientRect().height;
+            const elementPosition = el.getBoundingClientRect().top;
+            
+            // Formula to precisely center the bounding box in the viewport
+            const offsetPosition = elementPosition + window.pageYOffset - (windowHeight / 2) + (elementHeight / 2);
+            
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: 'smooth'
+            });
+            
+            // Wait for smooth scroll to finish before shaking (approx 500-600ms)
+            setTimeout(() => {
+              el.classList.add('shake-error-animation');
+              setTimeout(() => {
+                el.classList.remove('shake-error-animation');
+              }, 600);
+            }, 600);
+          }
+        });
+      }
     },
     showAlert(message, type = 'success', title = '') {
       this.newProduct.alert.title = title || (type === 'success' ? 'Muvaffaqiyat' : type === 'error' ? 'Xatolik' : 'Ogohlantirish');
@@ -294,6 +394,21 @@ export default {
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  15%, 45%, 75% { transform: translateX(-6px); }
+  30%, 60%, 90% { transform: translateX(6px); }
+}
+
+.shake-error-animation {
+  animation: shakeError 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
+  outline: 2px solid #EF4444 !important;
+  outline-offset: 4px !important;
+  border-radius: 12px !important;
+  position: relative;
+  z-index: 10;
+}
 
 body {
   background-color: #f6f8fb;
@@ -516,5 +631,86 @@ body {
 
 .fade-enter .custom-alert-modal {
   transform: scale(0.9) translateY(20px);
+}
+
+/* Floating Live Preview Trigger */
+.live-preview-trigger {
+  position: fixed;
+  right: 50px;
+  bottom: 50px;
+  background-color: #ffffff;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  height: 52px;
+  width: 52px;
+  border-radius: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  z-index: 2001; /* Above almost everything */
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  font-family: inherit;
+  color: #1E293B;
+  overflow: hidden;
+  white-space: nowrap;
+  position: fixed; /* Explicitly fixed again */
+}
+
+.live-preview-trigger:hover {
+  width: 180px;
+  padding: 0 18px;
+  flex-direction: row; /* Icon on the left */
+  justify-content: center;
+  gap: 10px;
+  border-color: #22C55E;
+  color: #22C55E;
+  box-shadow: 0 20px 25px -5px rgba(34, 197, 94, 0.1);
+}
+
+.live-preview-trigger-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.live-preview-trigger-text {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  width: 0;
+  transform: translateX(10px);
+  transition: all 0.4s ease;
+  pointer-events: none;
+}
+
+.live-preview-trigger:hover .live-preview-trigger-text {
+  opacity: 1;
+  width: auto;
+  transform: translateX(0);
+}
+
+.live-preview-trigger--active {
+  background-color: #22C55E;
+  color: #ffffff;
+  border-color: #22C55E;
+}
+
+@media (max-width: 600px) {
+  .live-preview-trigger:hover {
+    width: 48px;
+    padding: 0;
+  }
+  .live-preview-trigger-text {
+    display: none;
+  }
+  .live-preview-trigger {
+    right: 16px;
+    bottom: 80px;
+  }
 }
 </style>

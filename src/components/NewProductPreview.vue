@@ -33,11 +33,21 @@
                     <polyline points="15 18 9 12 15 6"></polyline>
                   </svg>
                 </button>
-                <img :src="allGalleryItems[selectedImageIndex] ? allGalleryItems[selectedImageIndex].url : ''" alt="Product" class="new-product-preview__main-img">
+                <img 
+                  :src="allGalleryItems[selectedImageIndex] ? allGalleryItems[selectedImageIndex].url : ''" 
+                  alt="Product" 
+                  class="new-product-preview__main-img"
+                  @click="openViewer(selectedImageIndex)"
+                >
              </div>
              <div class="new-product-preview__main-img-wrap new-product-preview__main-img-wrap--secondary">
                 <template v-if="allGalleryItems.length > 1">
-                  <img :src="allGalleryItems[(selectedImageIndex + 1) % allGalleryItems.length].url" alt="Product" class="new-product-preview__main-img">
+                  <img 
+                    :src="allGalleryItems[(selectedImageIndex + 1) % allGalleryItems.length].url" 
+                    alt="Product" 
+                    class="new-product-preview__main-img"
+                    @click="openViewer((selectedImageIndex + 1) % allGalleryItems.length)"
+                  >
                 </template>
                 <button class="new-product-preview__nav-btn new-product-preview__nav-btn--right" @click="nextImg">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -67,9 +77,7 @@
             </div>
           </div>
 
-          <div v-else class="new-product-preview__desc-text">
-            {{ displayDescription }}
-          </div>
+          <div v-else class="new-product-preview__desc-html" v-html="displayDescription"></div>
 
           <!-- Video Preview (Only if video exists) -->
           <div v-if="sharedProduct.video && sharedProduct.video.videoId" class="new-product-preview__extra-img-wrap">
@@ -172,14 +180,16 @@
           <h3 class="new-product-preview__seller-name">ZAFAR MOTO TA'MINOT MAS'ULIYATI CHEKLANGAN JAMIYAT</h3>
           
           <div class="new-product-preview__phone-box">
-             <div class="new-product-preview__phone-input-style">
+             <div class="new-product-preview__phone-field">
                 <svg class="new-product-preview__phone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                    <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span class="new-product-preview__phone-placeholder">+998 ** *** ** **</span>
+                <span class="new-product-preview__phone-number">
+                   {{ isPhoneVisible ? '+998 90 234 45 44' : '+998 ** *** ** **' }}
+                </span>
              </div>
              <button class="new-product-preview__phone-link" @click="isPhoneVisible = !isPhoneVisible">
-                Telefon raqamini ko'rsatish
+                {{ isPhoneVisible ? 'Raqamni yashirish' : 'Telefon raqamini ko\'rsatish' }}
              </button>
           </div>
 
@@ -196,7 +206,7 @@
         <div class="new-product-preview__card">
            <h4 class="new-product-preview__card-subtitle">To'lov usullari</h4>
            <div class="new-product-preview__payment-grid">
-              <div v-for="pay in payments" :key="pay.id" class="new-product-preview__payment-item">
+              <div v-for="pay in selectedPaymentItems" :key="pay.id" class="new-product-preview__payment-item">
                  <img :src="pay.icon" :alt="pay.name" class="new-product-preview__payment-icon">
                  <span class="new-product-preview__payment-name">{{ pay.name }}</span>
               </div>
@@ -206,19 +216,63 @@
       </aside>
 
     </div>
+
+    <!-- Image Viewer -->
+    <BaseImageViewer 
+      :show="viewerShow" 
+      :images="viewerImages" 
+      :initial-index="viewerIndex" 
+      @close="viewerShow = false" 
+    />
+    
+    <!-- Premium Sticky Footer for Step 3 -->
+    <transition name="slide-up-footer">
+      <div class="sticky-footer-wrapper" v-if="showStickyFooter">
+        <div class="step-action-bar">
+          <div class="sab-left">
+            <div class="sab-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="sab-text">
+              <h4>Barchasi to'g'rimi?</h4>
+              <p>Agar ma'lumotlar tayyor bo'lsa, mahsulotni yarating.</p>
+            </div>
+          </div>
+          <div class="sab-right">
+            <button class="sab-btn sab-btn--secondary" @click="$emit('change-step', 2)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Ortga qaytish
+            </button>
+            <button class="sab-btn sab-btn--primary" @click="handleCreate">
+              Mahsulotni yaratish
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script>
 import { formatPrice } from '../utils/formatters';
+import BaseImageViewer from './BaseImageViewer.vue';
 
 export default {
   name: 'NewProductPreview',
+  components: {
+    BaseImageViewer
+  },
   inject: ['sharedProduct'],
   data() {
     return {
       selectedImageIndex: 0,
       isPhoneVisible: false,
+      viewerShow: false,
+      viewerIndex: 0,
       selectedFeatures: {}, // { "Rang": "Oq", "Size": "M" }
       predefinedColors: [
         { name: "Oq", hex: "#FFFFFF" },
@@ -234,21 +288,45 @@ export default {
         { name: "Binafsha", hex: "#8B5CF6" }, 
         { name: "Och ko'k", hex: "#0EA5E9" }
       ],
-      payments: [
-        { id: 1, name: 'Oilakredit', icon: 'https://img.icons8.com/color/48/000000/leaf.png' },
-        { id: 2, name: 'Bank krediti', icon: 'https://img.icons8.com/color/48/000000/museum.png' },
-        { id: 3, name: 'Naqd pulda', icon: 'https://img.icons8.com/color/48/000000/money-bag.png' },
-        { id: 4, name: 'SSUDA', icon: 'https://img.icons8.com/color/48/000000/handshake.png' }
-      ]
+      paymentOptions: [
+        { id: 1, name: 'Oila kredit', icon: 'https://img.icons8.com/color/48/000000/leaf.png' },
+        { id: 2, name: 'SSUDA', icon: 'https://img.icons8.com/color/48/000000/handshake.png' },
+        { id: 3, name: 'Bank krediti', icon: 'https://img.icons8.com/color/48/000000/museum.png' },
+        { id: 4, name: 'Naqd pulda', icon: 'https://img.icons8.com/color/48/000000/money-bag.png' },
+        { id: 5, name: 'Pul o\'tkazish', icon: 'https://img.icons8.com/color/48/000000/money-transfer.png' }
+      ],
+      showStickyFooter: false
     };
   },
   created() {
     this.initSelections();
   },
+  mounted() {
+    setTimeout(() => {
+      this.showStickyFooter = true;
+    }, 150);
+  },
+  watch: {
+    // Reset gallery to first image when color changes
+    'selectedFeatures.Rang / Цвет'() {
+      this.selectedImageIndex = 0;
+    }
+  },
   computed: {
     productTitle() {
       // Prefer Russian because original UI was in Russian for product name
       return this.sharedProduct.title_ru || this.sharedProduct.title || 'Новый товар';
+    },
+
+    selectedPaymentItems() {
+      const selectedIds = this.sharedProduct.delivery.selectedPayments || [];
+      return this.paymentOptions.filter(p => selectedIds.includes(p.id));
+    },
+
+    viewerImages() {
+      return this.allGalleryItems
+        .filter(item => item.type === 'image')
+        .map(item => item.url);
     },
 
     availableFeatures() {
@@ -287,19 +365,27 @@ export default {
     allGalleryItems() {
       const items = [];
       const p = this.sharedProduct;
+      const seenIds = new Set(); // To prevent duplicate images
 
       // 1. Color specific images first (if color selected)
       const selectedColor = this.selectedFeatures['Rang / Цвет'];
       if (selectedColor && p.colorMedia && p.colorMedia[selectedColor]) {
         p.colorMedia[selectedColor].forEach(id => {
-          if (id) items.push({ type: 'image', url: this.getImageUrl(id) });
+          if (id) {
+            items.push({ type: 'image', id: String(id), url: this.getImageUrl(id) });
+            seenIds.add(String(id));
+          }
         });
       }
 
-      // 2. Add General Images
-      if (p.images && p.images.length > 0) {
+      // 2. Add General Images (ONLY if no color specific images were found)
+      if (items.length === 0 && p.images && p.images.length > 0) {
         p.images.forEach(img => {
-          items.push({ type: 'image', url: this.getImageUrl(img) });
+          const idStr = String(img);
+          if (!seenIds.has(idStr)) {
+            items.push({ type: 'image', id: idStr, url: this.getImageUrl(img) });
+            seenIds.add(idStr);
+          }
         });
       }
 
@@ -340,7 +426,7 @@ export default {
       // Show both if available, otherwise fallback
       const ru = this.sharedProduct.specs.manualRu || '';
       const uz = this.sharedProduct.specs.manualUz || '';
-      if (ru && uz) return `${ru}\n\n${uz}`;
+      if (ru && uz) return `<div class="lang-block ru-desc">${ru}</div><div class="lang-block uz-desc" style="margin-top: 24px;">${uz}</div>`;
       return ru || uz || '';
     }
   },
@@ -365,13 +451,32 @@ export default {
       if (id.startsWith('http')) return id;
       return `https://api.cabinet.smart-market.uz/uploads/images/${id}`;
     },
+    openViewer(index) {
+      const item = this.allGalleryItems[index];
+      if (!item || item.type !== 'image') return;
+      
+      // Calculate index relative to images only
+      const imagesOnly = this.allGalleryItems.filter(i => i.type === 'image');
+      this.viewerIndex = imagesOnly.findIndex(i => i.url === item.url);
+      this.viewerShow = true;
+    },
     nextImg() {
       this.selectedImageIndex = (this.selectedImageIndex + 1) % this.allGalleryItems.length;
     },
     prevImg() {
       this.selectedImageIndex = (this.selectedImageIndex - 1 + this.allGalleryItems.length) % this.allGalleryItems.length;
     },
-    formatPrice
+    formatPrice,
+    handleCreate() {
+      if (this.sharedProduct.alert) {
+         this.sharedProduct.alert = {
+            show: true,
+            title: 'Muvaffaqiyatli saqlandi',
+            message: 'Yangi mahsulot tizimga muvaffaqiyatli qo\'shildi va moderatsiyaga yuborildi!',
+            type: 'success'
+         };
+      }
+    }
   }
 };
 </script>
@@ -504,6 +609,7 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  cursor: zoom-in;
 }
 
 .new-product-preview__nav-btn {
@@ -602,13 +708,29 @@ export default {
   line-height: 1.5;
 }
 
-.new-product-preview__desc-text {
+.new-product-preview__desc-html {
   font-size: 14px;
-  color: #6b7280;
+  color: #374151;
   line-height: 1.6;
   margin-bottom: 24px;
-  white-space: pre-wrap;
+  word-break: break-word;
 }
+
+.new-product-preview__desc-html ::v-deep img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  display: block;
+  margin: 20px 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.new-product-preview__desc-html ::v-deep h1 { font-size: 20px; font-weight: 700; margin: 24px 0 12px 0; color: #111827; }
+.new-product-preview__desc-html ::v-deep h2 { font-size: 18px; font-weight: 700; margin: 20px 0 10px 0; color: #111827; }
+.new-product-preview__desc-html ::v-deep h3 { font-size: 16px; font-weight: 700; margin: 16px 0 8px 0; color: #111827; }
+.new-product-preview__desc-html ::v-deep p { margin-bottom: 12px; }
+.new-product-preview__desc-html ::v-deep b, .new-product-preview__desc-html ::v-deep strong { font-weight: 700; }
+.new-product-preview__desc-html ::v-deep i, .new-product-preview__desc-html ::v-deep em { font-style: italic; }
 
 .new-product-preview__extra-img-wrap {
   width: 100%;
@@ -926,18 +1048,18 @@ export default {
 .new-product-preview__verified-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background-color: #10b981;
+  gap: 8px;
+  background-color: #22c55e;
   color: #fff;
-  padding: 6px 14px;
-  border-radius: 100px;
-  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .new-product-preview__verified-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 .new-product-preview__seller-name {
@@ -953,33 +1075,47 @@ export default {
   margin-bottom: 24px;
 }
 
-.new-product-preview__phone-input-style {
+.new-product-preview__phone-field {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  gap: 16px;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 12px 16px;
+  border-radius: 14px;
+  padding: 16px;
   background-color: #fff;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
 }
 
 .new-product-preview__phone-icon {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   color: #9ca3af;
+}
+
+.new-product-preview__phone-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: 0.5px;
 }
 
 .new-product-preview__phone-link {
   background: none;
   border: none;
   color: #22c55e;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   padding: 0;
   width: 100%;
   text-align: center;
+  transition: color 0.2s;
+}
+
+.new-product-preview__phone-link:hover {
+  color: #16a34a;
 }
 
 .new-product-preview__address {
@@ -1052,6 +1188,163 @@ export default {
   }
   .new-product-preview__main-img-wrap--secondary {
     display: none;
+  }
+}
+
+/* Sticky Footer Styles */
+.sticky-footer-wrapper {
+  position: fixed;
+  bottom: 0px;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.slide-up-footer-enter-active, .slide-up-footer-leave-active {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-up-footer-enter, .slide-up-footer-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.step-action-bar {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 20px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.step-action-bar:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.sab-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sab-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #E0F2FE;
+  color: #0284C7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sab-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.sab-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.sab-text h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.sab-text p {
+  margin: 0;
+  font-size: 14px;
+  color: #6B7280;
+}
+
+.sab-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+}
+
+.sab-btn--secondary {
+  background: #FFFFFF;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.sab-btn--secondary:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #1E293B;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.sab-btn--secondary:active {
+  transform: translateY(0);
+  background: #F1F5F9;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+}
+
+.sab-btn--primary {
+  background: #22C55E;
+  color: #ffffff;
+}
+
+.sab-btn--primary:hover {
+  background: #16A34A;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px -2px rgba(34, 197, 94, 0.25), 0 3px 6px -2px rgba(34, 197, 94, 0.15);
+}
+
+.sab-btn--primary:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .step-action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px;
+  }
+  .sab-right {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .sab-btn {
+    width: 100%;
   }
 }
 </style>
