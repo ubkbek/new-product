@@ -67,12 +67,14 @@
               <th>Shtrix-kod raqami</th>
               <th class="new-product-pricing__th--bulk">
                 <div class="new-product-pricing__th-content">
-                  MXIK kodi
-                  <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('mxikCode', $event)">
-                    <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
+                  <div class="new-product-pricing__th-inner">
+                    <span class="new-product-pricing__th-text">MXIK kodi</span>
+                    <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('mxikCode', $event)">
+                      <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
                   <!-- Bulk Popover -->
                   <div v-if="activeBulkColumn === 'mxikCode'" class="new-product-pricing__bulk-popover" @click.stop>
                     <input 
@@ -88,14 +90,16 @@
                 </div>
               </th>
               <th>Tavsiya qilingan narx</th>
-              <th class="new-product-pricing__th--bulk">
+              <th class="new-product-pricing__th--bulk" style="min-width: 300px;">
                 <div class="new-product-pricing__th-content">
-                  Barcha miqdori 
-                  <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('totalQuantity', $event)">
-                    <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
+                  <div class="new-product-pricing__th-inner">
+                    <span class="new-product-pricing__th-text">Barcha miqdori</span>
+                    <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('totalQuantity', $event)">
+                      <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
                   <!-- Bulk Popover -->
                   <div v-if="activeBulkColumn === 'totalQuantity'" class="new-product-pricing__bulk-popover" @click.stop>
                     <input 
@@ -113,12 +117,14 @@
               </th>
               <th class="new-product-pricing__th--bulk">
                 <div class="new-product-pricing__th-content">
-                  Eng kam sotish miqdori 
-                  <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('minSaleQuantity', $event)">
-                    <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
+                  <div class="new-product-pricing__th-inner">
+                    <span class="new-product-pricing__th-text">Eng kam sotish miqdori</span>
+                    <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('minSaleQuantity', $event)">
+                      <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
                   <!-- Bulk Popover -->
                   <div v-if="activeBulkColumn === 'minSaleQuantity'" class="new-product-pricing__bulk-popover" @click.stop>
                     <input 
@@ -136,12 +142,14 @@
               </th>
               <th class="new-product-pricing__th--bulk">
                 <div class="new-product-pricing__th-content">
-                  Bahosi (so'm) 
-                  <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('price', $event)">
-                    <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
+                  <div class="new-product-pricing__th-inner">
+                    <span class="new-product-pricing__th-text">Bahosi (so'm)</span>
+                    <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('price', $event)">
+                      <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
                   <!-- Bulk Popover -->
                   <div v-if="activeBulkColumn === 'price'" class="new-product-pricing__bulk-popover" @click.stop>
                     <input 
@@ -159,12 +167,14 @@
               </th>
               <th class="new-product-pricing__th--bulk">
                 <div class="new-product-pricing__th-content">
-                  Chegirma (so'm) 
-                  <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('discount', $event)">
-                    <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
+                  <div class="new-product-pricing__th-inner">
+                    <span class="new-product-pricing__th-text">Chegirma (so'm)</span>
+                    <button class="new-product-pricing__bulk-btn" @click="toggleBulkInput('discount', $event)">
+                      <svg class="new-product-pricing__bulk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 3L4 14H11V21L20 10H13V3Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
                   <!-- Bulk Popover -->
                   <div v-if="activeBulkColumn === 'discount'" class="new-product-pricing__bulk-popover" @click.stop>
                     <input 
@@ -284,16 +294,34 @@
         </table>
       </div>
 
-      <!-- Navigation Footer -->
-      <div class="new-product-pricing__footer">
-        <button class="new-product-pricing__btn-next" @click="handleNextStep">
-          Keyingi qadam
-          <svg class="new-product-pricing__btn-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </div>
     </div>
+
+    <!-- Premium Sticky Footer -->
+    <transition name="slide-up-footer">
+      <div class="sticky-footer-wrapper" v-if="showStickyFooter">
+        <div class="step-action-bar">
+          <div class="sab-left">
+            <div class="sab-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="sab-text">
+              <h4>Ushbu bo'limdagi barcha ishlar yakunlandimi?</h4>
+              <p>Keyingi qadamda mahsulotning umumiy ko'rinishi namoyish etiladi.</p>
+            </div>
+          </div>
+          <div class="sab-right">
+            <button class="sab-btn sab-btn--primary" @click="handleNextStep">
+              Keyingi qadam
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
 
   </div>
 </template>
@@ -306,8 +334,9 @@ export default {
   inject: ['sharedProduct', 'showToast'],
   data() {
     return {
+      showStickyFooter: false,
       rowErrors: {},
-      commissionPercent: 2, // Constant as requested
+      commissionPercent: 3.2, // Constant as requested
       activeBulkColumn: null, // Tracks which lightning icon is clicked
       bulkInputs: {
         mxikCode: '',
@@ -350,11 +379,18 @@ export default {
     }
     // Global click listener to close bulk popovers
     window.addEventListener('click', this.handleGlobalClick);
+    window.addEventListener('scroll', this.handleScroll);
+    this.handleScroll(); // Initial check
   },
   beforeDestroy() {
     window.removeEventListener('click', this.handleGlobalClick);
+    window.removeEventListener('scroll', this.handleScroll);
   },
   methods: {
+    handleScroll() {
+      // Show footer only when scrolled down (~200px)
+      this.showStickyFooter = window.scrollY > 200;
+    },
     formatPrice,
     
     // Bulk Apply Logic
@@ -712,15 +748,25 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
   position: relative;
-  flex-wrap: wrap; /* Allow icon to wrap if needed or text to wrap around it */
   min-height: 40px;
+}
+
+.new-product-pricing__th-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+.new-product-pricing__th-text {
+  margin-right: 4px;
 }
 
 .new-product-pricing__bulk-btn {
   width: 22px;
   height: 22px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: linear-gradient(135deg, #FFB800 0%, #FF8A00 100%);
   border: none;
@@ -1089,6 +1135,138 @@ export default {
   .new-product-pricing__example-grid {
     grid-template-columns: 1fr;
     gap: 20px;
+  }
+}
+
+/* Sticky Footer Styles */
+.sticky-footer-wrapper {
+  position: sticky;
+  bottom: 24px;
+  z-index: 50;
+  margin-top: 40px;
+  max-width: 966px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.slide-up-footer-enter-active, .slide-up-footer-leave-active {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-up-footer-enter, .slide-up-footer-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.step-action-bar {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 20px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+}
+
+.step-action-bar:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.sab-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sab-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #F3F4F6;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sab-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.sab-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.sab-text h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.sab-text p {
+  margin: 0;
+  font-size: 14px;
+  color: #6B7280;
+}
+
+.sab-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+}
+
+.sab-btn--primary {
+  background: #22C55E;
+  color: #ffffff;
+}
+
+.sab-btn--primary:hover {
+  background: #16A34A;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px -2px rgba(34, 197, 94, 0.25), 0 3px 6px -2px rgba(34, 197, 94, 0.15);
+}
+
+.sab-btn--primary:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .step-action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px;
+  }
+  .sab-right {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .sab-btn {
+    width: 100%;
   }
 }
 </style>

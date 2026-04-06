@@ -11,7 +11,7 @@
     </div>
     
     <div class="container-small" v-if="currentStep === 1">
-      <StepOne />
+      <StepOne @next-step="updateStep(2)" />
     </div>
     
     <div v-else-if="currentStep === 2">
@@ -115,7 +115,7 @@ export default {
         features: savedProduct.features || [],
         delivery: {
           selectedDelivery: (savedProduct.delivery && savedProduct.delivery.selectedDelivery) || 1,
-          selectedPayments: (savedProduct.delivery && savedProduct.delivery.selectedPayments) || [2]
+          selectedPayments: (savedProduct.delivery && savedProduct.delivery.selectedPayments) || [1, 2, 3, 4, 5]
         },
         skuRows: savedProduct.skuRows || [],
         colorMedia: savedProduct.colorMedia || {},
@@ -151,7 +151,12 @@ export default {
         if (s.selectedVariant === 'manual') return !!(s.manualUz && s.manualRu);
         return s.variants && s.variants.length > 0 && !!s.selectedVariant;
       })();
-      return hasCategory && hasTitle && hasTitleRu && hasImages && hasSpecs;
+      const hasColorMediaValid = Object.values(p.colorMedia || {}).every(mediaArray => {
+        const count = (mediaArray || []).filter(img => img).length;
+        return count === 0 || count >= 2;
+      });
+
+      return hasCategory && hasTitle && hasTitleRu && hasImages && hasSpecs && hasColorMediaValid;
     },
     step1ValidationMessage() {
       const p = this.newProduct;
@@ -162,6 +167,15 @@ export default {
       const s = p.specs;
       if (s && s.selectedVariant === 'manual' && (!s.manualUz || !s.manualRu)) return 'Texnik parametrlarni to\'ldiring.';
       if (s && s.selectedVariant !== 'manual' && (!s.variants || s.variants.length === 0)) return 'Texnik parametrlarni to\'ldiring.';
+
+      // Check color media counts (min 2 or 0)
+      for (const [colorName, mediaArray] of Object.entries(p.colorMedia || {})) {
+        const count = (mediaArray || []).filter(img => img).length;
+        if (count === 1) {
+          return `${colorName} uchun kamida 2 ta rasm yuklash kerak.`;
+        }
+      }
+
       return 'Iltimos, barcha majburiy maydonlarni to\'ldiring.';
     },
     step2Valid() {
