@@ -12,13 +12,15 @@
 
       <div class="base-rich-editor__divider"></div>
 
-      <!-- Format Dropdown -->
-      <select class="base-rich-editor__select" @change="exec('formatBlock', $event.target.value)" title="Choose Format">
-        <option value="p">Paragraph</option>
-        <option value="h1">Heading 1</option>
-        <option value="h2">Heading 2</option>
-        <option value="h3">Heading 3</option>
-      </select>
+      <AppDropdown
+        v-model="activeFormat"
+        :options="formatOptions"
+        label-key="label"
+        value-key="value"
+        placeholder="Format"
+        class="base-rich-editor__format-dropdown"
+        @input="onFormatChange"
+      />
 
       <div class="base-rich-editor__divider"></div>
 
@@ -62,8 +64,13 @@
 </template>
 
 <script>
+import AppDropdown from './AppDropdown.vue';
+
 export default {
   name: 'BaseRichEditor',
+  components: {
+    AppDropdown
+  },
   props: {
     value: {
       type: String,
@@ -90,7 +97,14 @@ export default {
   },
   data() {
     return {
-      isUploading: false
+      isUploading: false,
+      activeFormat: 'p',
+      formatOptions: [
+        { value: 'p', label: 'Paragraph' },
+        { value: 'h1', label: 'Heading 1' },
+        { value: 'h2', label: 'Heading 2' },
+        { value: 'h3', label: 'Heading 3' }
+      ]
     };
   },
   watch: {
@@ -113,6 +127,9 @@ export default {
       document.execCommand(command, false, value);
       this.$refs.editor.focus();
       this.onInput();
+    },
+    onFormatChange(val) {
+      this.exec('formatBlock', val);
     },
     onInput() {
       const html = this.$refs.editor.innerHTML;
@@ -254,6 +271,34 @@ export default {
   line-height: 1.6;
   outline: none;
   word-break: break-word;
+}
+
+.base-rich-editor__format-dropdown {
+  width: 120px;
+}
+
+/* Override AppDropdown trigger height for toolbar */
+.base-rich-editor__format-dropdown ::v-deep .app-dropdown__trigger {
+  height: 32px;
+  border-radius: 8px;
+  padding: 0 10px;
+  background-color: #F8FAFC;
+  border-color: #E2E8F0;
+}
+
+.base-rich-editor__format-dropdown ::v-deep .app-dropdown__trigger--active {
+  border-color: #22c55e;
+  background-color: #ffffff;
+}
+
+.base-rich-editor__format-dropdown ::v-deep .app-dropdown__selected,
+.base-rich-editor__format-dropdown ::v-deep .app-dropdown__placeholder {
+  font-size: 12px;
+}
+
+.base-rich-editor__format-dropdown ::v-deep .app-dropdown__menu {
+  top: calc(100% + 4px);
+  width: 140px;
 }
 
 .base-rich-editor__content:empty:before {

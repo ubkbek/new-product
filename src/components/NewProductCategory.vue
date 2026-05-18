@@ -21,7 +21,7 @@
             {{ config.label }}<span class="new-product-category__required">*</span>
           </label>
           <div class="new-product-category__select-wrapper">
-            <BaseDropdown
+            <AppDropdown
               v-model="sharedProduct[config.model]"
               :options="config.options"
               :placeholder="config.placeholder"
@@ -38,12 +38,12 @@
 </template>
 
 <script>
-import BaseDropdown from './BaseDropdown.vue';
+import AppDropdown from './AppDropdown.vue';
 
 export default {
   name: 'NewProductCategory',
   components: {
-    BaseDropdown
+    AppDropdown
   },
   inject: ['sharedProduct'],
   data() {

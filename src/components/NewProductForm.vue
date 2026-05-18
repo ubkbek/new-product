@@ -46,14 +46,13 @@
             Mahsulot yoki xizmat nomi (Rus tilida)<span class="new-product-form__required">*</span>
           </label>
           <div class="new-product-form__select-wrapper">
-            <select class="new-product-form__select" v-model="form.nameRu" required>
-              <option value="" disabled>Выбрать</option>
-              <option value="rus1">Rus 1</option>
-              <option value="rus2">Rus 2</option>
-            </select>
-            <svg class="new-product-form__select-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
+            <AppDropdown
+              v-model="form.nameRu"
+              :options="nameRuOptions"
+              placeholder="Выбрать"
+              label-key="label"
+              value-key="value"
+            />
           </div>
         </div>
       </div>
@@ -80,14 +79,13 @@
             O'lchov birligi<span class="new-product-form__required">*</span>
           </label>
           <div class="new-product-form__select-wrapper">
-            <select class="new-product-form__select" v-model="form.unit" required>
-              <option value="" disabled>Выбрать</option>
-              <option value="kg">Kg</option>
-              <option value="dona">Dona</option>
-            </select>
-            <svg class="new-product-form__select-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
+            <AppDropdown
+              v-model="form.unit"
+              :options="unitOptions"
+              placeholder="Выбрать"
+              label-key="label"
+              value-key="value"
+            />
           </div>
         </div>
         <div class="new-product-form__group">
@@ -156,8 +154,13 @@
 </template>
 
 <script>
+import AppDropdown from './AppDropdown.vue';
+
 export default {
   name: 'NewProductForm',
+  components: {
+    AppDropdown
+  },
   data() {
     return {
       form: {
@@ -171,7 +174,15 @@ export default {
         minQuantity: '',
         category: '',
         totalValue: ''
-      }
+      },
+      nameRuOptions: [
+        { value: 'rus1', label: 'Mahsulot turi (Rus)' },
+        { value: 'rus2', label: 'Ehtiyot qismi (Rus)' }
+      ],
+      unitOptions: [
+        { value: 'kg', label: 'Kg' },
+        { value: 'dona', label: 'Dona' }
+      ]
     };
   }
 };
